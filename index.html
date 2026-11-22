@@ -233,6 +233,23 @@ input[type=range].unset::-webkit-slider-thumb{border-color:var(--line)}
 .seg .pill{min-height:40px;font-size:14px}
 .chk{display:flex;align-items:center;gap:10px;min-height:44px;font-size:15px;cursor:pointer}
 .chk input{width:20px;height:20px;accent-color:var(--accent)}
+.react{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 18px}
+.heart{border:1px solid var(--line);background:var(--solid);border-radius:999px;padding:8px 16px;min-height:42px;display:inline-flex;align-items:center;gap:8px;font-size:15px;font-weight:500}
+.heart .h{font-size:18px;line-height:1;color:var(--accent)}
+.heart.on{background:color-mix(in srgb,var(--accent) 12%,var(--solid));border-color:var(--accent)}
+.heart.sm{min-height:36px;padding:6px 12px;font-size:14px}
+.likers{font-size:14px;color:var(--mute)}
+.pdf{display:inline-flex;align-items:center;gap:8px;text-decoration:none}
+.thread{margin-top:14px;border-left:2px solid var(--line);padding-left:16px}
+.reply{display:flex;gap:10px;padding:10px 0}
+.reply .av{width:34px;height:34px;font-size:16px}
+.reply .rb{flex:1}
+.reply .rb b{font-weight:600;font-size:14px}
+.reply .rb small{color:var(--mute);font-size:12.5px;margin-left:6px}
+.reply .rb p{margin:2px 0 0;font-size:15px;white-space:pre-line;overflow-wrap:anywhere}
+.reply .del{border:0;background:none;color:var(--mute);font-size:13px;min-height:32px;padding:0 4px}
+.rform{display:flex;gap:8px;margin-top:8px;align-items:flex-end}
+.rform textarea{min-height:44px;height:44px;resize:vertical}
 .ro-cm{font:400 19px/1.5 var(--serif);white-space:pre-line;margin:0}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -361,6 +378,11 @@ input[type=range].unset::-webkit-slider-thumb{border-color:var(--line)}
             <div style="display:flex;gap:8px;flex-wrap:wrap"><label class="btn ghost" style="display:inline-flex;align-items:center;cursor:pointer">Enviar foto<input type="file" accept="image/*" id="fFile" hidden></label><button type="button" class="btn ghost" id="cClear">Remover</button></div>
           </div>
         </div>
+      </div>
+      <div class="full">
+        <label class="lb" for="fPdf">PDF do livro (link, opcional)</label>
+        <input class="field" id="fPdf" type="url" inputmode="url" placeholder="https://drive.google.com/…">
+        <p class="ainote" style="margin-top:6px">Cole um link do Google Drive (com acesso “qualquer pessoa com o link”) ou de outro site. Só você e seus seguidores aprovados veem o botão de baixar. Compartilhe apenas PDFs que você tem direito de distribuir, como obras em domínio público ou seus próprios resumos.</p>
       </div>
       <div class="full"><span class="lb">Cor da lombada</span><div class="swatches" id="sw"></div></div>
     </div>
@@ -528,7 +550,14 @@ const LocalStore = {
   async followsMe(t){ const x = F_().find(x => x.from === t && x.to === this.user.uid); return x ? x.status : null; },
   async suggest(t, data){ LS.set('lib_sugs', [...(LS.get('lib_sugs') || []), {...data, id: uid(), to: t}]); },
   async suggestions(){ return (LS.get('lib_sugs') || []).filter(x => x.to === this.user.uid); },
-  async dropSuggestion(id){ LS.set('lib_sugs', (LS.get('lib_sugs') || []).filter(x => x.id !== id)); }
+  async dropSuggestion(id){ LS.set('lib_sugs', (LS.get('lib_sugs') || []).filter(x => x.id !== id)); },
+  /* curtidas e respostas */
+  _rx(o, b){ const all = LS.get('lib_rx') || {}, k = o + '|' + b; return [all, k, all[k] || {likes: {}, commentLikes: {}, replies: []}]; },
+  async reactions(o, b){ const [, , r] = this._rx(o, b), pr = P_(), who = u => ({uid: u, ...(pr[u] || {})});
+    return {likes: Object.keys(r.likes).map(who), commentLikes: Object.keys(r.commentLikes).map(who), replies: r.replies.slice().sort((a, c) => a.at.localeCompare(c.at))}; },
+  async toggleLike(o, b, kind, on){ const [all, k, r] = this._rx(o, b), me = this.user.uid; if (on) r[kind][me] = 1; else delete r[kind][me]; all[k] = r; LS.set('lib_rx', all); },
+  async addReply(o, b, text){ const [all, k, r] = this._rx(o, b), p = this.profile || {}; r.replies.push({id: uid(), uid: this.user.uid, username: p.username || '', name: p.name || '', text, at: new Date().toISOString()}); all[k] = r; LS.set('lib_rx', all); },
+  async deleteReply(o, b, id){ const [all, k, r] = this._rx(o, b); r.replies = r.replies.filter(x => x.id !== id); all[k] = r; LS.set('lib_rx', all); }
 };
 
 async function makeFirebaseStore(cfg){
@@ -577,7 +606,15 @@ async function makeFirebaseStore(cfg){
     async followsMe(t){ const s = await F.getDoc(d('users', this.user.uid, 'followers', t)); return s.exists() ? s.data().status : null; },
     async suggest(t, data){ await F.addDoc(F.collection(db, 'users', t, 'suggestions'), data); },
     async suggestions(){ return (await F.getDocs(F.collection(db, 'users', this.user.uid, 'suggestions'))).docs.map(x => ({id: x.id, ...x.data()})); },
-    dropSuggestion(id){ return F.deleteDoc(d('users', this.user.uid, 'suggestions', id)); }
+    dropSuggestion(id){ return F.deleteDoc(d('users', this.user.uid, 'suggestions', id)); },
+    /* curtidas e respostas: users/{dona}/books/{livro}/likes | commentLikes | replies */
+    async reactions(o, b){
+      const [l, c, r] = await Promise.all(['likes', 'commentLikes', 'replies'].map(k => all('users', o, 'books', b, k)));
+      return {likes: l, commentLikes: c, replies: r.map(x => ({...x, id: x.uid, uid: x.author})).sort((a, z) => (a.at || '').localeCompare(z.at || ''))};
+    },
+    toggleLike(o, b, kind, on){ const me = this.user.uid, p = this.profile || {}; return on ? F.setDoc(d('users', o, 'books', b, kind, me), {username: p.username || '', name: p.name || '', at: now()}) : F.deleteDoc(d('users', o, 'books', b, kind, me)); },
+    addReply(o, b, text){ const p = this.profile || {}; return F.addDoc(F.collection(db, 'users', o, 'books', b, 'replies'), {author: this.user.uid, username: p.username || '', name: p.name || '', text, at: now()}); },
+    deleteReply(o, b, id){ return F.deleteDoc(d('users', o, 'books', b, 'replies', id)); }
   };
 }
 
@@ -780,6 +817,8 @@ function renderInfo(){
     <span class="status mono">${STATUS[b.status] || ''}${b.status === 'lido' && b.endDate ? ' · ' + fmtDate(b.endDate) : ''}</span>
     <h2 id="dTitle">${esc(b.title)}</h2>
     <p class="author">${esc(b.author)}</p>
+    <div class="react" id="reactBook"><button class="heart" id="likeB" aria-pressed="false"><span class="h">♡</span><span>Curtir</span></button><span class="likers" id="likers"></span>
+      ${b.pdfUrl && /^https:\/\//i.test(b.pdfUrl) ? `<a class="btn ghost pdf" href="${esc(b.pdfUrl)}" target="_blank" rel="noopener">Baixar PDF ↓</a>` : ''}</div>
     ${b.suggestedBy ? `<div class="from">Sugerido por <b>@${esc(b.suggestedBy)}</b>${b.suggestionNote ? `<q>${esc(b.suggestionNote)}</q>` : ''}</div>` : ''}
     <div class="facts">
       <div><span>Publicado em</span><b>${esc(fmtDate(b.published) || '—')}</b></div>
@@ -798,13 +837,68 @@ function renderInfo(){
         return rated.length ? `<div id="rates">${rated.map(([r, i]) => rateRow(r, i, true)).join('')}</div>`
           : `<p class="ainote" style="margin-top:0">${ro ? 'Ainda sem avaliação.' : 'Ainda sem avaliação. Clique em “Editar” para dar suas notas.'}</p>`; })()}
     </div>
-    <div class="sec"><h3>${ro ? 'Comentários de ' + esc(first(viewing.profile)) : 'Meus comentários'}</h3><p class="ro-cm">${b.comments ? esc(b.comments) : `<span style="color:var(--mute)">${ro ? 'Sem comentários.' : 'Sem comentários ainda.'}</span>`}</p></div>
+    <div class="sec"><h3>${ro ? 'Comentários de ' + esc(first(viewing.profile)) : 'Meus comentários'}</h3><p class="ro-cm">${b.comments ? esc(b.comments) : `<span style="color:var(--mute)">${ro ? 'Sem comentários.' : 'Sem comentários ainda.'}</span>`}</p>
+      ${b.comments ? '<div class="react" style="margin:12px 0 0"><button class="heart sm" id="likeC" aria-pressed="false"><span class="h">♡</span><span id="likeCn">Curtir comentário</span></button></div>' : ''}
+      <div class="thread" id="thread"><p class="ainote" style="margin:0">Carregando respostas…</p></div>
+    </div>
     ${ro ? '' : '<div class="actions"><button class="btn" id="editB">Editar livro e avaliação</button><button class="btn ghost" id="shareB">Compartilhar</button><button class="btn ghost" id="delB">Excluir livro</button></div>'}`;
   const i = list.findIndex(x => x.id === b.id);
   $('#prevB').disabled = i <= 0; $('#nextB').disabled = i < 0 || i >= list.length - 1;
   $('#lookB').href = 'https://www.google.com/search?q=' + encodeURIComponent(`${b.title} ${b.author} livro`);
   if (!ro) bindInfo();
+  loadReactions(b);
 }
+/* ---------------- Curtidas e respostas ---------------- */
+const ownerOf = () => viewing ? viewing.uid : S.user.uid;
+const canDelReply = r => r.uid === S.user.uid || ownerOf() === S.user.uid;
+let rx = null;
+function namesLine(arr){
+  if (!arr.length) return '';
+  const n = arr.map(x => x.uid === S.user.uid ? 'você' : '@' + (x.username || 'alguém'));
+  return 'Curtido por ' + (n.length <= 2 ? n.join(' e ') : `${n.slice(0, 2).join(', ')} e mais ${n.length - 2}`);
+}
+function paintReactions(){
+  if (!rx || !$('#likeB')) return;
+  const me = S.user.uid, liked = rx.likes.some(x => x.uid === me), cl = rx.commentLikes.some(x => x.uid === me);
+  $('#likeB').classList.toggle('on', liked); $('#likeB').setAttribute('aria-pressed', liked);
+  $('#likeB').innerHTML = `<span class="h">${liked ? '♥' : '♡'}</span><span>${liked ? 'Curtido' : 'Curtir'}${rx.likes.length ? ' · ' + rx.likes.length : ''}</span>`;
+  $('#likers').textContent = namesLine(rx.likes);
+  if ($('#likeC')) { $('#likeC').classList.toggle('on', cl); $('#likeC').setAttribute('aria-pressed', cl);
+    $('#likeC').innerHTML = `<span class="h">${cl ? '♥' : '♡'}</span><span>${cl ? 'Comentário curtido' : 'Curtir comentário'}${rx.commentLikes.length ? ' · ' + rx.commentLikes.length : ''}</span>`;
+    $('#likeC').title = namesLine(rx.commentLikes); }
+  const t = $('#thread');
+  t.innerHTML = `${rx.replies.length ? '' : `<p class="ainote" style="margin:0">${current.comments ? 'Nenhuma resposta ainda.' : 'Ainda não há conversa sobre este livro.'}</p>`}
+    ${rx.replies.map(r => `<div class="reply" data-rid="${esc(r.id)}">${avatar({uid: r.uid, name: r.name, username: r.username})}<div class="rb"><b>${esc(r.name || r.username || 'Leitor(a)')}</b><small>@${esc(r.username || '')} · ${fmtDate((r.at || '').slice(0, 10))}</small><p>${esc(r.text)}</p></div>${canDelReply(r) ? '<button class="del" data-del>Apagar</button>' : ''}</div>`).join('')}
+    ${S.profile ? `<form class="rform" id="rform"><textarea class="field" id="rtext" maxlength="1000" placeholder="${current.comments ? 'Responder ao comentário…' : 'Escrever sobre este livro…'}" aria-label="Escrever resposta"></textarea><button class="btn">Enviar</button></form>` : '<p class="ainote">Crie seu nome de usuário em Pessoas para responder.</p>'}`;
+  const f = $('#rform'); if (f) f.onsubmit = sendReply;
+}
+async function loadReactions(b){
+  rx = null; const id = b.id;
+  try { const r = await S.reactions(ownerOf(), id); if (current && current.id === id) { rx = r; paintReactions(); } }
+  catch { if ($('#thread')) $('#thread').innerHTML = '<p class="ainote" style="margin:0">Não consegui carregar curtidas e respostas.</p>'; }
+}
+async function toggleKind(kind){
+  if (!rx) return; const me = S.user.uid, list = rx[kind], on = !list.some(x => x.uid === me), p = S.profile || {};
+  if (on) list.push({uid: me, username: p.username, name: p.name}); else rx[kind] = list.filter(x => x.uid !== me);
+  paintReactions();
+  try { await S.toggleLike(ownerOf(), current.id, kind, on); } catch (e) { toast(ERR[e.code] || 'Não deu certo.'); loadReactions(current); }
+}
+async function sendReply(e){
+  e.preventDefault(); const t = $('#rtext').value.trim(); if (!t) return;
+  const btn = e.currentTarget.querySelector('button'); btn.disabled = true;
+  try { await S.addReply(ownerOf(), current.id, t.slice(0, 1000)); await loadReactions(current); }
+  catch (err) { toast(ERR[err.code] || 'Não consegui enviar.'); btn.disabled = false; }
+}
+document.addEventListener('click', async e => {
+  if (e.target.closest('#likeB')) return toggleKind('likes');
+  if (e.target.closest('#likeC')) return toggleKind('commentLikes');
+  const del = e.target.closest('#thread [data-del]');
+  if (del) {
+    if (!del.dataset.sure) { del.dataset.sure = 1; del.textContent = 'Apagar mesmo?'; return; }
+    try { await S.deleteReply(ownerOf(), current.id, del.closest('.reply').dataset.rid); await loadReactions(current); } catch { toast('Não consegui apagar.'); }
+  }
+});
+
 /* Contexto pode ser texto (novo) ou objeto com 3 partes (versão anterior) */
 function ctxText(c){ if (!c) return ''; if (typeof c === 'string') return c; return [c.historico, c.inovacao, c.destaque].filter(Boolean).join('\n\n'); }
 function ctxHTML(b, ro){
@@ -870,7 +964,7 @@ function openForm(b){
   const set = (id, v) => $(id).value = v ?? '';
   set('#fT', form.title); set('#fA', form.author); set('#fC', form.category); set('#fP', form.published); set('#fN', form.pages);
   set('#fS', form.status); set('#fI', form.startDate); set('#fF', form.endDate); set('#fY', form.synopsis);
-  set('#fH', ctxText(form.context)); set('#fCm', form.comments);
+  set('#fH', ctxText(form.context)); set('#fCm', form.comments); set('#fPdf', form.pdfUrl);
   form.ratings = (form.ratings && form.ratings.length ? form.ratings : CRITERIA.map(label => ({label, value: null}))).map(r => ({...r}));
   drawFormRates();
   $('#ctxMsg').textContent = 'A sinopse e o contexto são preenchidos automaticamente ao escolher um livro na busca. Você pode editar.';
@@ -918,8 +1012,10 @@ $('#bookForm').onsubmit = async e => {
   const v = id => $(id).value.trim();
   if (!v('#fT') || !v('#fA')) return $('#fMsg').textContent = 'Preencha pelo menos título e autor(a).';
   if (v('#fI') && v('#fF') && v('#fF') < v('#fI')) return $('#fMsg').textContent = 'A data de término está antes da data de início.';
+  if (v('#fPdf') && !/^https:\/\/\S+$/i.test(v('#fPdf'))) return $('#fMsg').textContent = 'O link do PDF precisa começar com https://';
   Object.assign(form, {title: v('#fT'), author: v('#fA'), category: v('#fC'), published: v('#fP'), pages: v('#fN') ? +v('#fN') : null, status: v('#fS'), startDate: v('#fI'), endDate: v('#fF'), synopsis: v('#fY'), updatedAt: new Date().toISOString()});
   form.context = v('#fH') || null;
+  form.pdfUrl = v('#fPdf') || '';
   form.comments = $('#fCm').value.trim();
   form.ratings = form.ratings.filter(r => r.label.trim() || r.value != null).map(r => ({label: r.label.trim() || 'Critério', value: r.value}));
   $('#fSave').disabled = true;

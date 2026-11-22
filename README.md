@@ -145,6 +145,8 @@ other projects, it runs entirely on **free tiers**: no paid licenses, no server 
 | 👤 | **Unique @username** | Reserved in a `usernames` collection, so no two people share the same handle |
 | 🤝 | **Follow requests** | Ask to follow; the other person sees the request and chooses **Allow** or **Decline** |
 | 💌 | **Book suggestions** | People connected by a follow can recommend a book with a note; the receiver adds it to "Want to read" in one click, and the card shows who suggested it |
+| ❤️ | **Likes & replies** | Followers can like a book, like your review and reply to it in a thread; you can delete any reply on your books |
+| 📄 | **PDF link** | Attach a PDF link to a book; only you and approved followers see the download button |
 | 📰 | **Activity feed** | Recent reads and final scores from everyone you follow |
 | 👀 | **Read-only profiles** | Open a friend's shelf, book cards, ratings and comments without being able to edit them |
 | 🔐 | **Security** | Firebase Auth with e-mail and password; Security Rules only let **approved followers** read someone's books |
@@ -320,6 +322,8 @@ como meus outros projetos, roda inteiro em **planos gratuitos**: sem licenças p
 | 👤 | **@nome de usuário único** | Reservado numa coleção `usernames`, então duas pessoas nunca têm o mesmo @ |
 | 🤝 | **Pedidos para seguir** | Você pede para seguir; a outra pessoa vê o pedido e escolhe **Permitir** ou **Recusar** |
 | 💌 | **Sugestões de livros** | Quem se segue pode indicar um livro com um recado; quem recebe coloca na estante "Quero ler" com um clique, e a ficha mostra quem sugeriu |
+| ❤️ | **Curtidas e respostas** | Seguidores podem curtir o livro, curtir o seu comentário e responder numa conversa; você pode apagar qualquer resposta nos seus livros |
+| 📄 | **Link do PDF** | Adicione o link de um PDF ao livro; só você e seus seguidores aprovados veem o botão de baixar |
 | 📰 | **Atividade** | Leituras recentes e notas finais de todo mundo que você segue |
 | 👀 | **Perfis somente leitura** | Abra a estante de uma amiga, as fichas, notas e comentários, sem poder editar nada |
 | 🔐 | **Segurança** | Firebase Auth com e-mail e senha; as Security Rules só deixam **seguidores aprovados** lerem os livros de alguém |

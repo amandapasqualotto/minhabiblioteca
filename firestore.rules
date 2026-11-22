@@ -42,6 +42,27 @@ service cloud.firestore {
       match /books/{bookId} {
         allow read: if isMe(uid) || approvedBy(uid);
         allow write: if isMe(uid);
+
+        // Curtidas no livro e no comentário: o id do documento é o uid de quem curtiu
+        match /likes/{lid} {
+          allow read: if isMe(uid) || approvedBy(uid);
+          allow create: if (isMe(uid) || approvedBy(uid)) && lid == request.auth.uid;
+          allow delete: if signedIn() && (lid == request.auth.uid || isMe(uid));
+        }
+        match /commentLikes/{lid} {
+          allow read: if isMe(uid) || approvedBy(uid);
+          allow create: if (isMe(uid) || approvedBy(uid)) && lid == request.auth.uid;
+          allow delete: if signedIn() && (lid == request.auth.uid || isMe(uid));
+        }
+        // Respostas: a dona e os seguidores aceitos escrevem; quem escreveu ou a dona apagam
+        match /replies/{rid} {
+          allow read: if isMe(uid) || approvedBy(uid);
+          allow create: if (isMe(uid) || approvedBy(uid))
+            && request.resource.data.author == request.auth.uid
+            && request.resource.data.text is string
+            && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 1000;
+          allow delete: if signedIn() && (resource.data.author == request.auth.uid || isMe(uid));
+        }
       }
 
       // Sugestões de livros recebidas por {uid}: só quem se segue pode enviar
