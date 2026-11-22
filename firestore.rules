@@ -10,6 +10,12 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/users/$(owner)/followers/$(request.auth.uid))
         && get(/databases/$(database)/documents/users/$(owner)/followers/$(request.auth.uid)).data.status == 'accepted';
     }
+    // As duas pessoas estão conectadas? (eu sigo a outra, ou ela me segue, com pedido aceito)
+    function connectedWith(other) {
+      return approvedBy(other)
+        || (exists(/databases/$(database)/documents/users/$(request.auth.uid)/followers/$(other))
+            && get(/databases/$(database)/documents/users/$(request.auth.uid)/followers/$(other)).data.status == 'accepted');
+    }
     function onlyStatusToAccepted() {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
         && request.resource.data.status == 'accepted';
@@ -36,6 +42,16 @@ service cloud.firestore {
       match /books/{bookId} {
         allow read: if isMe(uid) || approvedBy(uid);
         allow write: if isMe(uid);
+      }
+
+      // Sugestões de livros recebidas por {uid}: só quem se segue pode enviar
+      match /suggestions/{sid} {
+        allow read, delete: if isMe(uid);
+        allow create: if signedIn() && !isMe(uid)
+          && request.resource.data.fromUid == request.auth.uid
+          && request.resource.data.title is string && request.resource.data.title.size() <= 300
+          && request.resource.data.note is string && request.resource.data.note.size() <= 500
+          && connectedWith(uid);
       }
 
       // Seguidores de {uid}. O id do documento é o uid de quem segue.

@@ -91,8 +91,12 @@ label.lb{display:block;font-size:13px;color:var(--mute);margin:0 0 5px}
 .spine .band{position:absolute;left:0;right:0;height:2px;background:currentColor;opacity:.35}
 .spine .rib{position:absolute;top:-1px;right:5px;width:7px;height:26px;background:var(--accent);clip-path:polygon(0 0,100% 0,100% 100%,50% 75%,0 100%)}
 .spine.ghost{background:repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px 100%);opacity:.5;box-shadow:none}
-.empty{flex:1;text-align:center;align-self:center;color:var(--mute);padding:0 20px 40px}
+.empty{position:absolute;left:0;right:0;bottom:44px;text-align:center;color:var(--mute);padding:0 20px;margin:0}
+.empty p{margin:0 0 4px}
 .empty .btn{margin-top:12px}
+.empty.over{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 20px 10px;margin:0;background:radial-gradient(closest-side,var(--bg) 55%,transparent)}
+.empty.over p{margin:0}
+.empty.over .acts2{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
 
 .bar{position:fixed;left:50%;translate:-50% 0;bottom:max(16px,env(safe-area-inset-bottom));width:min(560px,calc(100% - 28px));display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 8px 8px 20px;border-radius:999px;background:var(--card);border:1px solid var(--line);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 20px 40px -20px var(--shadow);z-index:20}
 .bar .who{font:500 12px/1.35 var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--mute)}
@@ -197,6 +201,15 @@ input[type=range].unset::-webkit-slider-thumb{border-color:var(--line)}
 .feed-item .sc{margin-left:auto;font:500 22px var(--serif);white-space:nowrap}
 .lock{text-align:center;padding:24px 20px 60px;color:var(--mute);max-width:460px;margin:0 auto}
 .lock h3{font:italic 400 32px var(--serif);color:var(--ink);margin:0 0 8px}
+.sug{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--line);align-items:flex-start}
+.sug .mini{width:52px;aspect-ratio:2/3;border-radius:2px;flex:none;overflow:hidden;position:relative;box-shadow:0 6px 10px -6px var(--shadow)}
+.sug .mini img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.sug .body{flex:1}
+.sug small{display:block;color:var(--mute);font-size:13.5px}
+.sug q{display:block;font:italic 400 18px/1.4 var(--serif);margin:8px 0 10px;quotes:"“" "”"}
+.sug .acts{display:flex;gap:6px;flex-wrap:wrap}
+.from{border-left:2px solid var(--accent);padding:4px 0 4px 14px;margin:0 0 20px;color:var(--mute);font-size:15px}
+.from q{display:block;font:italic 400 18px/1.4 var(--serif);color:var(--ink);margin-top:2px}
 .ro-cm{font:400 19px/1.5 var(--serif);white-space:pre-line;margin:0}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -333,6 +346,7 @@ input[type=range].unset::-webkit-slider-thumb{border-color:var(--line)}
     <div class="ptabs" id="ptabs">
       <button class="pill" data-pt="search">Buscar</button>
       <button class="pill" data-pt="req">Pedidos <span class="badge hide" id="reqBadge2"></span></button>
+      <button class="pill" data-pt="sugs">Sugestões <span class="badge hide" id="sugBadge"></span></button>
       <button class="pill" data-pt="feed">Atividade</button>
       <button class="pill" data-pt="followers">Seguidores</button>
       <button class="pill" data-pt="following">Seguindo</button>
@@ -353,6 +367,26 @@ input[type=range].unset::-webkit-slider-thumb{border-color:var(--line)}
     </div>
     <div class="msg" id="uMsg"></div>
     <div class="form-foot"><button type="button" class="btn ghost" id="uCancel">Cancelar</button><button class="btn" id="uSave">Salvar</button></div>
+  </form>
+</div>
+
+<!-- ================= SUGERIR ================= -->
+<div class="modal hide" id="sm">
+  <form class="form" id="sugForm" novalidate style="width:min(560px,100%)">
+    <h2 id="smTitle">Sugerir um livro</h2>
+    <p class="hint">A sugestão chega na aba “Sugestões” da outra pessoa, que pode colocar o livro na estante “Quero ler”.</p>
+    <div class="grid">
+      <div class="full">
+        <label class="lb" for="sLook">Buscar no Google Livros</label>
+        <div class="lookup"><input class="field" id="sLook" placeholder="Ex.: Torto Arado"><button type="button" class="btn ghost" id="sLookGo">Buscar</button></div>
+        <div class="results" id="sResults"></div>
+      </div>
+      <div class="full"><label class="lb" for="sT">Título *</label><input class="field" id="sT"></div>
+      <div class="full"><label class="lb" for="sA">Autor(a) *</label><input class="field" id="sA"></div>
+      <div class="full"><label class="lb" for="sN">Por que você indica?</label><textarea class="field" id="sN" maxlength="500" placeholder="Conta em poucas linhas por que essa pessoa vai gostar."></textarea></div>
+    </div>
+    <div class="msg" id="sMsg"></div>
+    <div class="form-foot"><button type="button" class="btn ghost" id="sCancel">Cancelar</button><button class="btn" id="sSend">Enviar sugestão</button></div>
   </form>
 </div>
 
@@ -430,7 +464,11 @@ const LocalStore = {
   async accept(f){ const me = this.user.uid; LS.set('lib_follows', F_().map(x => x.from === f && x.to === me ? {...x, status: 'accepted'} : x)); },
   async followers(u){ const pr = P_(); return F_().filter(x => x.to === u).map(x => ({...(pr[x.from] || {}), uid: x.from, status: x.status, at: x.at})); },
   async following(u){ const pr = P_(); return F_().filter(x => x.from === u).map(x => ({...(pr[x.to] || {}), uid: x.to, status: x.status, at: x.at})); },
-  async statusWith(t){ const x = F_().find(x => x.from === this.user.uid && x.to === t); return x ? x.status : null; }
+  async statusWith(t){ const x = F_().find(x => x.from === this.user.uid && x.to === t); return x ? x.status : null; },
+  async followsMe(t){ const x = F_().find(x => x.from === t && x.to === this.user.uid); return x ? x.status : null; },
+  async suggest(t, data){ LS.set('lib_sugs', [...(LS.get('lib_sugs') || []), {...data, id: uid(), to: t}]); },
+  async suggestions(){ return (LS.get('lib_sugs') || []).filter(x => x.to === this.user.uid); },
+  async dropSuggestion(id){ LS.set('lib_sugs', (LS.get('lib_sugs') || []).filter(x => x.id !== id)); }
 };
 
 async function makeFirebaseStore(cfg){
@@ -474,7 +512,11 @@ async function makeFirebaseStore(cfg){
     async accept(f){ const me = this.user.uid, b = F.writeBatch(db); b.update(d('users', me, 'followers', f), {status: 'accepted'}); b.update(d('users', f, 'following', me), {status: 'accepted'}); await b.commit(); },
     followers(u){ return all('users', u, 'followers'); },
     following(u){ return all('users', u, 'following'); },
-    async statusWith(t){ const s = await F.getDoc(d('users', this.user.uid, 'following', t)); return s.exists() ? s.data().status : null; }
+    async statusWith(t){ const s = await F.getDoc(d('users', this.user.uid, 'following', t)); return s.exists() ? s.data().status : null; },
+    async followsMe(t){ const s = await F.getDoc(d('users', this.user.uid, 'followers', t)); return s.exists() ? s.data().status : null; },
+    async suggest(t, data){ await F.addDoc(F.collection(db, 'users', t, 'suggestions'), data); },
+    async suggestions(){ return (await F.getDocs(F.collection(db, 'users', this.user.uid, 'suggestions'))).docs.map(x => ({id: x.id, ...x.data()})); },
+    dropSuggestion(id){ return F.deleteDoc(d('users', this.user.uid, 'suggestions', id)); }
   };
 }
 
@@ -543,9 +585,10 @@ async function showMine(){
 async function viewProfile(u, openId){
   if (u === S.user.uid) return showMine();
   let p = null, st = null;
-  try { [p, st] = await Promise.all([S.getProfile(u), S.statusWith(u)]); } catch {}
+  let fm = null;
+  try { [p, st, fm] = await Promise.all([S.getProfile(u), S.statusWith(u), S.followsMe(u).catch(() => null)]); } catch {}
   if (!p) return toast('Não encontrei esse perfil.');
-  viewing = {uid: u, profile: p, status: st}; cat = 'Todos'; query = ''; $('#q').value = ''; setMode(true);
+  viewing = {uid: u, profile: p, status: st, followsMe: fm}; cat = 'Todos'; query = ''; $('#q').value = ''; setMode(true);
   books = [];
   if (st === 'accepted') { try { books = await S.list(u); } catch { toast('Não consegui abrir essa biblioteca.'); } }
   $('#owner').textContent = 'biblioteca de ' + first(p);
@@ -555,7 +598,9 @@ async function viewProfile(u, openId){
 function relLabel(st){ return st === 'accepted' ? 'Seguindo ✓' : st === 'pending' ? 'Solicitado' : 'Seguir'; }
 function drawHandle(){
   const v = viewing; if (!v) return;
-  $('#handle').innerHTML = `<span>@${esc(v.profile.username)}</span><button class="sbtn ${v.status ? '' : 'pri'}" id="relBtn">${relLabel(v.status)}</button>`;
+  const canSug = v.status === 'accepted' || v.followsMe === 'accepted';
+  $('#handle').innerHTML = `<span>@${esc(v.profile.username)}</span><button class="sbtn ${v.status ? '' : 'pri'}" id="relBtn">${relLabel(v.status)}</button>${canSug ? '<button class="sbtn" id="sugBtn">Sugerir um livro</button>' : ''}`;
+  if (canSug) $('#sugBtn').onclick = () => openSuggest(v.profile);
   $('#relBtn').onclick = async e => {
     const b = e.currentTarget;
     try {
@@ -598,7 +643,7 @@ function render(){
   $('#cats').innerHTML = [...new Set([...DEFAULT_CATS, ...cats.slice(1)])].map(c => `<option value="${esc(c)}">`).join('');
   $('#shelfRead').innerHTML = read.length ? read.map(spineHTML).join('') : books.length
     ? `<p class="empty">Nenhum livro lido encontrado com esse filtro.</p>`
-    : viewing ? ghosts() + `<p class="empty">Ainda não há livros lidos nesta estante.</p>` : ghosts() + `<div class="empty"><p>Sua estante está vazia.<br>Que tal colocar o primeiro livro?</p><button class="btn" data-act="add">+ Adicionar livro</button> <button class="btn ghost" data-act="seed">Ver com exemplos</button></div>`;
+    : viewing ? ghosts() + `<div class="empty over"><p>Ainda não há livros lidos nesta estante.</p></div>` : ghosts() + `<div class="empty over"><p>Sua estante está vazia.<br>Que tal colocar o primeiro livro?</p><div class="acts2"><button class="btn" data-act="add">+ Adicionar livro</button><button class="btn ghost" data-act="seed">Ver com exemplos</button></div></div>`;
   $('#shelfTo').innerHTML = to.length ? to.map(spineHTML).join('') : `<p class="empty">${books.some(b => b.status === 'quero') ? 'Nada encontrado aqui.' : 'Livros marcados como “Quero ler” aparecem nesta estante.'}</p>`;
   $('#countTo').textContent = `${books.filter(b => b.status === 'quero').length} livros`;
   list = [...read, ...to];
@@ -657,6 +702,7 @@ function renderInfo(){
     <span class="status mono">${STATUS[b.status] || ''}${b.status === 'lido' && b.endDate ? ' · ' + fmtDate(b.endDate) : ''}</span>
     <h2 id="dTitle">${esc(b.title)}</h2>
     <p class="author">${esc(b.author)}</p>
+    ${b.suggestedBy ? `<div class="from">Sugerido por <b>@${esc(b.suggestedBy)}</b>${b.suggestionNote ? `<q>${esc(b.suggestionNote)}</q>` : ''}</div>` : ''}
     <div class="facts">
       <div><span>Publicado em</span><b>${esc(fmtDate(b.published) || '—')}</b></div>
       <div><span>Páginas</span><b>${b.pages ? esc(b.pages) : '—'}</b></div>
@@ -722,6 +768,7 @@ $('#closeB').onclick = closeBook; $('#prevB').onclick = () => step(-1); $('#next
 document.addEventListener('keydown', e => {
   if (!$('#fm').classList.contains('hide')) { if (e.key === 'Escape') closeForm(); return; }
   if (!$('#um').classList.contains('hide')) return;
+  if (!$('#sm').classList.contains('hide')) { if (e.key === 'Escape') $('#sm').classList.add('hide'); return; }
   if (!current && !$('#pp').classList.contains('hide')) { if (e.key === 'Escape') closePeople(); return; }
   if (!current || ['INPUT','TEXTAREA'].includes(document.activeElement.tagName)) return;
   if (e.key === 'Escape') closeBook(); if (e.key === 'ArrowLeft') step(-1); if (e.key === 'ArrowRight') step(1);
@@ -801,8 +848,11 @@ $('#results').onclick = e => {
 
 /* ---------------- Pessoas ---------------- */
 async function refreshRequests(){
-  try { const n = (await S.followers(S.user.uid)).filter(x => x.status === 'pending').length;
-    ['#reqBadge', '#reqBadge2'].forEach(x => { $(x).textContent = n; $(x).classList.toggle('hide', !n); }); } catch {}
+  let n = 0, k = 0;
+  try { n = (await S.followers(S.user.uid)).filter(x => x.status === 'pending').length; } catch {}
+  try { k = (await S.suggestions()).length; } catch {}
+  const set = (x, v) => { $(x).textContent = v; $(x).classList.toggle('hide', !v); };
+  set('#reqBadge2', n); set('#sugBadge', k); set('#reqBadge', n + k);
 }
 function openPeople(t){ if (t) ptab = t; const pp = $('#pp'); pp.classList.remove('hide'); pp.scrollTop = 0; requestAnimationFrame(() => pp.classList.add('open')); document.body.style.overflow = 'hidden'; drawPeople(); refreshRequests(); }
 function closePeople(){ const pp = $('#pp'); if (pp.classList.contains('hide')) return; pp.classList.remove('open'); document.body.style.overflow = ''; setTimeout(() => pp.classList.add('hide'), 300); }
@@ -839,10 +889,16 @@ async function drawPeople(){
       html = r.length ? r.map(p => urow(p, A('accept', 'Permitir', 'pri') + A('decline', 'Recusar'))).join('') : '<p class="pempty">Nenhum pedido para seguir no momento.</p>';
     } else if (ptab === 'followers') {
       const r = (await S.followers(me)).filter(x => x.status === 'accepted');
-      html = r.length ? r.map(p => urow(p, A('view', 'Ver') + A('remove', 'Remover'))).join('') : '<p class="pempty">Você ainda não tem seguidores.</p>';
+      html = r.length ? r.map(p => urow(p, A('view', 'Ver') + A('suggest', 'Sugerir') + A('remove', 'Remover'))).join('') : '<p class="pempty">Você ainda não tem seguidores.</p>';
     } else if (ptab === 'following') {
       const r = await S.following(me);
-      html = r.length ? r.map(p => urow(p, relBtns(p.status))).join('') : '<p class="pempty">Você ainda não segue ninguém. Use “Buscar” para encontrar pessoas.</p>';
+      html = r.length ? r.map(p => urow(p, (p.status === 'accepted' ? A('suggest', 'Sugerir') : '') + relBtns(p.status))).join('') : '<p class="pempty">Você ainda não segue ninguém. Use “Buscar” para encontrar pessoas.</p>';
+    } else if (ptab === 'sugs') {
+      const r = (await S.suggestions()).sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+      sugCache = r;
+      html = r.length ? r.map(x => { const c = PALETTE[hash(x.title || '') % PALETTE.length];
+        return `<div class="sug" data-sid="${esc(x.id)}"><span class="mini" style="background:${c}">${x.cover ? `<img src="${esc(x.cover)}" alt="" onerror="this.remove()">` : ''}</span><div class="body"><b>${esc(x.title)}</b><small>${esc(x.author)} · sugerido por <a href="#" data-from="${esc(x.fromUid)}">@${esc(x.fromUsername)}</a>${x.createdAt ? ' · ' + fmtDate(x.createdAt.slice(0, 10)) : ''}</small>${x.note ? `<q>${esc(x.note)}</q>` : ''}<div class="acts">${A('sugAdd', 'Colocar em Quero ler', 'pri')}${A('sugDrop', 'Dispensar')}</div></div></div>`; }).join('')
+        : '<p class="pempty">Nenhuma sugestão por enquanto. Quando alguém que você segue (ou que te segue) indicar um livro, ele aparece aqui.</p>';
     } else if (ptab === 'feed') {
       const fol = (await S.following(me)).filter(x => x.status === 'accepted');
       const lists = await Promise.all(fol.map(p => S.list(p.uid).then(bs => bs.map(b => ({b, p}))).catch(() => [])));
@@ -856,9 +912,24 @@ async function drawPeople(){
 }
 $('#pbody').onclick = async e => {
   const fi = e.target.closest('.feed-item'); if (fi) return viewProfile(fi.dataset.uid, fi.dataset.book);
+  const fr = e.target.closest('[data-from]'); if (fr) { e.preventDefault(); return viewProfile(fr.dataset.from); }
+  const sg = e.target.closest('.sug [data-a]');
+  if (sg) {
+    const x = sugCache.find(y => y.id === sg.closest('.sug').dataset.sid); if (!x) return; sg.disabled = true;
+    try {
+      if (sg.dataset.a === 'sugAdd') {
+        const nb = {id: uid(), title: x.title, author: x.author, published: x.published || '', pages: x.pages || null, category: x.category || '', synopsis: x.synopsis || '', cover: x.cover || '', status: 'quero', ratings: CRITERIA.map(label => ({label, value: null})), comments: '', suggestedBy: x.fromUsername || '', suggestionNote: x.note || '', createdAt: new Date().toISOString()};
+        await S.save(nb); if (!viewing) { books.push(nb); render(); }
+        toast('Colocado na estante Quero ler');
+      }
+      await S.dropSuggestion(x.id);
+    } catch (err) { toast(ERR[err.code] || 'Não deu certo.'); }
+    drawPeople(); refreshRequests(); return;
+  }
   const b = e.target.closest('[data-a]'); if (!b) return;
   const u = b.closest('.urow').dataset.uid, a = b.dataset.a;
   if (a === 'view') return viewProfile(u);
+  if (a === 'suggest') { const p = await S.getProfile(u).catch(() => null); return p ? openSuggest(p) : toast('Não encontrei esse perfil.'); }
   if (['unfollow', 'remove', 'decline'].includes(a) && !b.dataset.sure) {
     b.dataset.sure = 1; b.textContent = a === 'unfollow' ? (b.textContent === 'Solicitado' ? 'Cancelar pedido?' : 'Deixar de seguir?') : a === 'remove' ? 'Remover mesmo?' : 'Recusar mesmo?'; b.classList.add('warn'); return;
   }
@@ -872,6 +943,46 @@ $('#pbody').onclick = async e => {
   if (ptab === 'search') { const r = b.closest('.urow'), st = await S.statusWith(u).catch(() => null); r.querySelector('.acts').innerHTML = relBtns(st); }
   else drawPeople();
   refreshRequests();
+};
+
+/* ---------------- Sugestões ---------------- */
+let sugCache = [], sugTo = null, sugPick = {};
+function openSuggest(p){
+  sugTo = p; sugPick = {};
+  $('#smTitle').textContent = 'Sugerir um livro para ' + first(p);
+  ['#sLook', '#sT', '#sA', '#sN'].forEach(x => $(x).value = ''); $('#sResults').innerHTML = ''; $('#sMsg').textContent = '';
+  $('#sm').classList.remove('hide'); setTimeout(() => $('#sLook').focus(), 50);
+}
+$('#sCancel').onclick = () => $('#sm').classList.add('hide');
+$('#sm').onclick = e => { if (e.target.id === 'sm') $('#sm').classList.add('hide'); };
+async function sLookup(){
+  const q = $('#sLook').value.trim(), box = $('#sResults'); if (!q) return;
+  box.innerHTML = '<small style="color:var(--mute)">Procurando…</small>';
+  try {
+    const j = await (await fetch('https://www.googleapis.com/books/v1/volumes?maxResults=5&printType=books&q=' + encodeURIComponent(q))).json();
+    sLookup.items = j.items || [];
+    box.innerHTML = sLookup.items.length ? sLookup.items.map((it, i) => { const v = it.volumeInfo || {}, th = (v.imageLinks?.thumbnail || '').replace('http:', 'https:'); return `<button type="button" data-i="${i}">${th ? `<img src="${esc(th)}" alt="">` : '<img alt="">'}<span><b>${esc(v.title)}</b><small>${esc((v.authors || []).join(', '))}${v.publishedDate ? ' · ' + esc(v.publishedDate.slice(0, 4)) : ''}</small></span></button>`; }).join('') : '<small style="color:var(--mute)">Nada encontrado. Preencha à mão.</small>';
+  } catch { box.innerHTML = '<small style="color:var(--mute)">Busca indisponível aqui. Preencha título e autor à mão.</small>'; }
+}
+$('#sLookGo').onclick = sLookup;
+$('#sLook').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); sLookup(); } };
+$('#sResults').onclick = e => {
+  const b = e.target.closest('[data-i]'); if (!b) return; const v = sLookup.items[+b.dataset.i].volumeInfo || {};
+  const tmp = document.createElement('div'); tmp.innerHTML = v.description || '';
+  sugPick = {published: v.publishedDate || '', pages: v.pageCount || null, category: v.categories?.[0] || '', synopsis: tmp.textContent.slice(0, 3000), cover: (v.imageLinks?.thumbnail || '').replace('http:', 'https:').replace('&edge=curl', '')};
+  $('#sT').value = (v.title || '') + (v.subtitle ? ': ' + v.subtitle : ''); $('#sA').value = (v.authors || []).join(', ');
+  $('#sResults').innerHTML = '<small style="color:var(--mute)">Preenchido. Agora conte por que você indica.</small>'; $('#sN').focus();
+};
+$('#sugForm').onsubmit = async e => {
+  e.preventDefault(); const m = $('#sMsg'), t = $('#sT').value.trim(), a = $('#sA').value.trim();
+  if (!t || !a) return m.textContent = 'Preencha pelo menos título e autor(a).';
+  if (!S.profile) return m.textContent = 'Crie seu nome de usuário antes de sugerir livros.';
+  $('#sSend').disabled = true;
+  try {
+    await S.suggest(sugTo.uid, {...sugPick, title: t.slice(0, 300), author: a.slice(0, 200), note: $('#sN').value.trim().slice(0, 500), fromUid: S.user.uid, fromUsername: S.profile.username, fromName: S.profile.name || '', createdAt: new Date().toISOString()});
+    $('#sm').classList.add('hide'); toast('Sugestão enviada para @' + sugTo.username);
+  } catch (err) { m.textContent = err.code === 'permission-denied' ? 'Só dá para sugerir livros entre pessoas que se seguem.' : (ERR[err.code] || 'Não consegui enviar.'); }
+  $('#sSend').disabled = false;
 };
 
 /* ---------------- Perfil (nome de usuário) ---------------- */
