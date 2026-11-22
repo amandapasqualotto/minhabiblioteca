@@ -272,8 +272,8 @@ input[type=range].unset::-webkit-slider-thumb{border-color:var(--line)}
 @media(max-width:560px){.tcard{flex-wrap:wrap}.tcard .acts{width:100%;justify-content:flex-start;padding-left:68px}}
 .help-link{border:0;background:none;color:var(--mute);font-size:14px;text-decoration:underline;min-height:40px;width:100%}
 .mail{font:500 15px var(--mono);word-break:break-all;background:var(--bg2);padding:10px 14px;border-radius:10px;display:block;margin:6px 0 0}
-.logout-bottom{display:none}
-@media(max-width:600px){#outBtn{display:none}.logout-bottom{display:flex;justify-content:center;padding:48px 16px 24px}.logout-bottom .pill{min-width:160px;justify-content:center}}
+.logout-bottom{display:flex;justify-content:center;padding:48px 16px 24px}
+.logout-bottom .pill{min-width:160px;justify-content:center}
 .qr{display:grid;place-items:center;margin:4px auto 14px;width:220px;height:220px;background:#fff;border-radius:16px;padding:14px}
 .qr img,.qr canvas{width:100%!important;height:auto!important}
 .share-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
@@ -316,7 +316,6 @@ input[type=range].unset::-webkit-slider-thumb{border-color:var(--line)}
     <button class="pill mono" id="addBtn">+ Adicionar livro</button>
     <button class="pill mono" id="peopleBtn">Pessoas <span class="badge hide" id="reqBadge"></span></button>
     <button class="pill mono" id="helpBtn">Suporte</button>
-    <button class="pill mono" id="outBtn">Sair</button>
   </nav>
   <header class="hero">
     <h1><span id="typed"></span><span class="caret"></span></h1>
@@ -735,7 +734,7 @@ $('#aForgot').onclick = async () => {
   try { await S.reset(email); m.className = 'msg ok'; m.textContent = 'Enviamos um link de redefinição para ' + email + '.'; }
   catch (err) { m.className = 'msg'; m.textContent = ERR[err.code] || err.message; }
 };
-$('#outBtn').onclick = $('#outBtn2').onclick = () => S.signOut();
+$('#outBtn2').onclick = () => S.signOut();
 
 /* ---------------- App ---------------- */
 async function enterApp(user){
