@@ -171,6 +171,33 @@ input[type=range].unset::-webkit-slider-thumb{border-color:var(--line)}
 .form-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:22px;flex-wrap:wrap}
 .toast{position:fixed;top:18px;left:50%;translate:-50% 0;z-index:90;background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:14px;opacity:0;transition:.3s;pointer-events:none}
 .toast.show{opacity:1}
+.badge{min-width:20px;height:20px;border-radius:10px;background:var(--accent);color:#fff;font:600 11px var(--sans);display:inline-grid;place-items:center;padding:0 6px;letter-spacing:0}
+.handle{font:500 13px var(--mono);color:var(--mute);margin-top:8px;letter-spacing:.04em;display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap}
+.people{max-width:660px;margin:0 auto;padding:clamp(22px,4vw,44px) max(5vw,18px) 120px}
+.people h2{font:italic 400 44px/1.05 var(--serif);margin:0 0 6px}
+.me{color:var(--mute);margin:0 0 18px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.me b{color:var(--ink)}
+.ptabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 0 14px;padding-bottom:4px}
+.ptabs::-webkit-scrollbar{display:none}
+.ptabs .pill{flex:none}
+.urow{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.av{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font:500 22px var(--serif);flex:none}
+.urow .who2{flex:1}
+.urow .who2 b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.urow .who2 small{color:var(--mute);font-size:14px}
+.urow .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.sbtn{border:1px solid var(--line);background:var(--solid);border-radius:999px;padding:8px 15px;min-height:40px;font-size:14px;font-weight:500;white-space:nowrap}
+.sbtn.pri{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.sbtn.warn{color:var(--accent);border-color:var(--accent)}
+.pempty{color:var(--mute);text-align:center;padding:34px 10px}
+.feed-item{display:flex;gap:14px;padding:12px 0;border:0;border-bottom:1px solid var(--line);cursor:pointer;align-items:center;width:100%;text-align:left;background:none;min-height:44px}
+.feed-item .mini{width:42px;aspect-ratio:2/3;border-radius:2px;flex:none;overflow:hidden;position:relative;box-shadow:0 6px 10px -6px var(--shadow)}
+.feed-item .mini img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.feed-item small{display:block;color:var(--mute);font-size:13.5px}
+.feed-item .sc{margin-left:auto;font:500 22px var(--serif);white-space:nowrap}
+.lock{text-align:center;padding:24px 20px 60px;color:var(--mute);max-width:460px;margin:0 auto}
+.lock h3{font:italic 400 32px var(--serif);color:var(--ink);margin:0 0 8px}
+.ro-cm{font:400 19px/1.5 var(--serif);white-space:pre-line;margin:0}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -190,6 +217,7 @@ input[type=range].unset::-webkit-slider-thumb{border-color:var(--line)}
         <button type="button" data-tab="up">Criar conta</button>
       </div>
       <div class="row hide" id="nameRow"><label class="lb" for="aName">Seu nome</label><input class="field" id="aName" autocomplete="name" placeholder="Amanda"></div>
+      <div class="row hide" id="userRow"><label class="lb" for="aUser">Nome de usuário</label><input class="field" id="aUser" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="ex.: amanda.le"><small style="color:var(--mute);font-size:13px">É como as pessoas vão te encontrar. Letras minúsculas, números, ponto e _ (3 a 20).</small></div>
       <div class="row"><label class="lb" for="aEmail">E-mail</label><input class="field" id="aEmail" type="email" autocomplete="email" required></div>
       <div class="row"><label class="lb" for="aPass">Senha</label><input class="field" id="aPass" type="password" autocomplete="current-password" minlength="6" required></div>
       <div class="msg" id="aMsg" role="status"></div>
@@ -204,13 +232,16 @@ input[type=range].unset::-webkit-slider-thumb{border-color:var(--line)}
 <main id="app" class="hide">
   <nav class="top">
     <button class="pill mono" id="addBtn">+ Adicionar livro</button>
+    <button class="pill mono" id="peopleBtn">Pessoas <span class="badge hide" id="reqBadge"></span></button>
     <button class="pill mono" id="outBtn">Sair</button>
   </nav>
   <header class="hero">
     <h1><span id="typed"></span><span class="caret"></span></h1>
+    <div class="handle" id="handle"></div>
     <div class="count mono" id="count"></div>
     <input class="search" id="q" placeholder="O que você procura?" aria-label="Buscar livro, autor ou categoria">
   </header>
+  <div class="lock hide" id="lock"></div>
   <div class="chips" id="chips"></div>
 
   <section class="shelf-wrap" id="wrapRead">
@@ -235,6 +266,7 @@ input[type=range].unset::-webkit-slider-thumb{border-color:var(--line)}
   <div class="bar">
     <div class="who">Esta é a<br><b id="owner">sua biblioteca</b></div>
     <button class="btn" id="addBtn2">+ Novo livro</button>
+    <button class="btn hide" id="backBtn">← Minha biblioteca</button>
   </div>
 </main>
 
@@ -293,6 +325,37 @@ input[type=range].unset::-webkit-slider-thumb{border-color:var(--line)}
     </div>
   </form>
 </div>
+<!-- ================= PESSOAS ================= -->
+<div class="overlay hide" id="pp" role="dialog" aria-modal="true" aria-label="Pessoas">
+  <div class="people">
+    <h2>Pessoas</h2>
+    <div class="me" id="meLine"></div>
+    <div class="ptabs" id="ptabs">
+      <button class="pill" data-pt="search">Buscar</button>
+      <button class="pill" data-pt="req">Pedidos <span class="badge hide" id="reqBadge2"></span></button>
+      <button class="pill" data-pt="feed">Atividade</button>
+      <button class="pill" data-pt="followers">Seguidores</button>
+      <button class="pill" data-pt="following">Seguindo</button>
+    </div>
+    <div id="pbody"></div>
+  </div>
+  <nav class="navbar"><button id="ppClose">Fechar</button></nav>
+</div>
+
+<!-- ================= PERFIL ================= -->
+<div class="modal hide" id="um">
+  <form class="form" id="userForm" novalidate style="width:min(460px,100%)">
+    <h2>Seu perfil</h2>
+    <p class="hint">Seu nome de usuário é como as pessoas vão te encontrar e pedir para te seguir.</p>
+    <div class="grid">
+      <div class="full"><label class="lb" for="uName">Nome</label><input class="field" id="uName" autocomplete="name"></div>
+      <div class="full"><label class="lb" for="uUser">Nome de usuário</label><input class="field" id="uUser" autocapitalize="none" spellcheck="false" placeholder="ex.: amanda.le"></div>
+    </div>
+    <div class="msg" id="uMsg"></div>
+    <div class="form-foot"><button type="button" class="btn ghost" id="uCancel">Cancelar</button><button class="btn" id="uSave">Salvar</button></div>
+  </form>
+</div>
+
 <datalist id="cats"></datalist>
 <div class="toast" id="toast"></div>
 
@@ -303,9 +366,7 @@ input[type=range].unset::-webkit-slider-thumb{border-color:var(--line)}
    Firebase → Configurações do projeto → Seus apps → Web).
    Deixe null para usar o modo demonstração (salva no navegador).
    ============================================================ */
-const FIREBASE_CONFIG = null;
-/* Exemplo:
-cconst firebaseConfig = {
+const FIREBASE_CONFIG = {
   apiKey: "AIzaSyAHbJtb4ku63Lq69TGG_FduvUmA9WS2vBQ",
   authDomain: "minhabibliot.firebaseapp.com",
   projectId: "minhabibliot",
@@ -313,7 +374,6 @@ cconst firebaseConfig = {
   messagingSenderId: "81440343556",
   appId: "1:81440343556:web:6e990e55fb71f90b039751"
 };
-*/
 </script>
 <script>
 {
@@ -342,34 +402,79 @@ const LS = {
 };
 async function sha(s){ try { const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2,'0')).join(''); } catch { return 'h' + hash(s); } }
 
+const F_ = () => LS.get('lib_follows') || [];
+const P_ = () => LS.get('lib_profiles') || {};
 const LocalStore = {
-  mode: 'local', user: null,
-  async init(cb){ const s = LS.get('lib_session'); const users = LS.get('lib_users') || {}; this.user = s && users[s] ? {email: s, name: users[s].name} : null; cb(this.user); this.cb = cb; },
+  mode: 'local', user: null, profile: null,
+  async init(cb){ this.cb = cb; const s = LS.get('lib_session'); const users = LS.get('lib_users') || {}; this.user = s && users[s] ? {uid: s, email: s, name: users[s].name} : null; cb(this.user); },
   async signUp(email, pass, name){ const users = LS.get('lib_users') || {}; if (users[email]) throw {code:'auth/email-already-in-use'}; const salt = uid(); users[email] = {name: name || email.split('@')[0], salt, hash: await sha(salt + pass)}; LS.set('lib_users', users); return this.signIn(email, pass); },
-  async signIn(email, pass){ const u = (LS.get('lib_users') || {})[email]; if (!u || u.hash !== await sha(u.salt + pass)) throw {code:'auth/invalid-credential'}; LS.set('lib_session', email); this.user = {email, name: u.name}; this.cb(this.user); },
-  async signOut(){ LS.del('lib_session'); this.user = null; this.cb(null); },
+  async signIn(email, pass){ const u = (LS.get('lib_users') || {})[email]; if (!u || u.hash !== await sha(u.salt + pass)) throw {code:'auth/invalid-credential'}; LS.set('lib_session', email); this.user = {uid: email, email, name: u.name}; this.cb(this.user); },
+  async signOut(){ LS.del('lib_session'); this.user = null; this.profile = null; this.cb(null); },
   async reset(){ throw {code:'local/reset'}; },
-  key(){ return 'lib_books_' + this.user.email; },
-  async list(){ return LS.get(this.key()) || []; },
+  key(u){ return 'lib_books_' + (u || this.user.uid); },
+  async list(u){ return LS.get(this.key(u)) || []; },
   async save(b){ const all = await this.list(); const i = all.findIndex(x => x.id === b.id); i < 0 ? all.push(b) : all[i] = b; LS.set(this.key(), all); },
-  async remove(id){ LS.set(this.key(), (await this.list()).filter(x => x.id !== id)); }
+  async remove(id){ LS.set(this.key(), (await this.list()).filter(x => x.id !== id)); },
+  /* social */
+  async getProfile(u){ const p = P_()[u]; return p ? {...p, uid: u} : null; },
+  async usernameTaken(n){ const m = LS.get('lib_usernames') || {}; return !!m[n] && m[n] !== this.user?.uid; },
+  async setProfile(p){ const me = this.user.uid, names = LS.get('lib_usernames') || {}, profs = P_();
+    if (names[p.username] && names[p.username] !== me) throw {code:'user/taken'};
+    const old = profs[me]; if (old && old.username !== p.username) delete names[old.username];
+    names[p.username] = me; profs[me] = {...old, username: p.username, name: p.name};
+    LS.set('lib_usernames', names); LS.set('lib_profiles', profs); return {...profs[me], uid: me}; },
+  async findUsers(q){ return Object.entries(P_()).map(([u, p]) => ({...p, uid: u})).filter(p => p.username.startsWith(q)).slice(0, 10); },
+  async follow(t){ const me = this.user.uid; LS.set('lib_follows', [...F_().filter(x => !(x.from === me && x.to === t)), {from: me, to: t, status: 'pending', at: new Date().toISOString()}]); },
+  async unfollow(t){ const me = this.user.uid; LS.set('lib_follows', F_().filter(x => !(x.from === me && x.to === t))); },
+  async removeFollower(f){ const me = this.user.uid; LS.set('lib_follows', F_().filter(x => !(x.from === f && x.to === me))); },
+  async accept(f){ const me = this.user.uid; LS.set('lib_follows', F_().map(x => x.from === f && x.to === me ? {...x, status: 'accepted'} : x)); },
+  async followers(u){ const pr = P_(); return F_().filter(x => x.to === u).map(x => ({...(pr[x.from] || {}), uid: x.from, status: x.status, at: x.at})); },
+  async following(u){ const pr = P_(); return F_().filter(x => x.from === u).map(x => ({...(pr[x.to] || {}), uid: x.to, status: x.status, at: x.at})); },
+  async statusWith(t){ const x = F_().find(x => x.from === this.user.uid && x.to === t); return x ? x.status : null; }
 };
 
 async function makeFirebaseStore(cfg){
   const V = '10.12.2', base = `https://www.gstatic.com/firebasejs/${V}/`;
   const [A, U, F] = await Promise.all([import(base + 'firebase-app.js'), import(base + 'firebase-auth.js'), import(base + 'firebase-firestore.js')]);
   const app = A.initializeApp(cfg), auth = U.getAuth(app), db = F.getFirestore(app);
+  const d = (...p) => F.doc(db, ...p), now = () => new Date().toISOString();
+  const all = async (...p) => (await F.getDocs(F.collection(db, ...p))).docs.map(x => ({uid: x.id, ...x.data()}));
   return {
-    mode: 'firebase', user: null,
-    init(cb){ U.onAuthStateChanged(auth, u => { this.user = u ? {uid: u.uid, email: u.email, name: u.displayName || u.email.split('@')[0]} : null; cb(this.user); }); },
-    async signUp(email, pass, name){ const c = await U.createUserWithEmailAndPassword(auth, email, pass); if (name) await U.updateProfile(c.user, {displayName: name}); this.user = {uid: c.user.uid, email, name: name || email.split('@')[0]}; },
+    mode: 'firebase', user: null, profile: null,
+    init(cb){ U.onAuthStateChanged(auth, u => { this.user = u ? {uid: u.uid, email: u.email, name: u.displayName || u.email.split('@')[0]} : null; if (!u) this.profile = null; cb(this.user); }); },
+    async signUp(email, pass, name){ const c = await U.createUserWithEmailAndPassword(auth, email, pass); if (name) await U.updateProfile(c.user, {displayName: name}); },
     signIn: (e, p) => U.signInWithEmailAndPassword(auth, e, p),
     signOut: () => U.signOut(auth),
     reset: e => U.sendPasswordResetEmail(auth, e),
-    col(){ return F.collection(db, 'users', this.user.uid, 'books'); },
-    async list(){ const s = await F.getDocs(this.col()); return s.docs.map(d => ({id: d.id, ...d.data()})); },
+    col(u){ return F.collection(db, 'users', u || this.user.uid, 'books'); },
+    async list(u){ const s = await F.getDocs(this.col(u)); return s.docs.map(x => ({id: x.id, ...x.data()})); },
     save(b){ return F.setDoc(F.doc(this.col(), b.id), b); },
-    remove(id){ return F.deleteDoc(F.doc(this.col(), id)); }
+    remove(id){ return F.deleteDoc(F.doc(this.col(), id)); },
+    /* social */
+    async getProfile(u){ const s = await F.getDoc(d('users', u)); return s.exists() ? {uid: u, ...s.data()} : null; },
+    async usernameTaken(n){ const s = await F.getDoc(d('usernames', n)); return s.exists() && s.data().uid !== this.user?.uid; },
+    async setProfile(p){
+      const me = this.user.uid, old = await this.getProfile(me);
+      if (await this.usernameTaken(p.username)) throw {code:'user/taken'};
+      const b = F.writeBatch(db);
+      if (old?.username && old.username !== p.username) b.delete(d('usernames', old.username));
+      if (old?.username !== p.username) b.set(d('usernames', p.username), {uid: me});
+      b.set(d('users', me), {username: p.username, name: p.name, updatedAt: now()}, {merge: true});
+      await b.commit(); return {uid: me, username: p.username, name: p.name};
+    },
+    async findUsers(q){ const s = await F.getDocs(F.query(F.collection(db, 'users'), F.orderBy('username'), F.startAt(q), F.endAt(q + ''), F.limit(10))); return s.docs.map(x => ({uid: x.id, ...x.data()})); },
+    async follow(t){
+      const me = this.user.uid, mp = this.profile || {}, tp = await this.getProfile(t) || {}, at = now(), b = F.writeBatch(db);
+      b.set(d('users', t, 'followers', me), {username: mp.username || '', name: mp.name || '', status: 'pending', at});
+      b.set(d('users', me, 'following', t), {username: tp.username || '', name: tp.name || '', status: 'pending', at});
+      await b.commit();
+    },
+    async unfollow(t){ const me = this.user.uid, b = F.writeBatch(db); b.delete(d('users', t, 'followers', me)); b.delete(d('users', me, 'following', t)); await b.commit(); },
+    async removeFollower(f){ const me = this.user.uid, b = F.writeBatch(db); b.delete(d('users', me, 'followers', f)); b.delete(d('users', f, 'following', me)); await b.commit(); },
+    async accept(f){ const me = this.user.uid, b = F.writeBatch(db); b.update(d('users', me, 'followers', f), {status: 'accepted'}); b.update(d('users', f, 'following', me), {status: 'accepted'}); await b.commit(); },
+    followers(u){ return all('users', u, 'followers'); },
+    following(u){ return all('users', u, 'following'); },
+    async statusWith(t){ const s = await F.getDoc(d('users', this.user.uid, 'following', t)); return s.exists() ? s.data().status : null; }
   };
 }
 
@@ -377,21 +482,30 @@ const ERR = {
   'auth/invalid-credential':'E-mail ou senha incorretos.','auth/wrong-password':'E-mail ou senha incorretos.','auth/user-not-found':'E-mail ou senha incorretos.',
   'auth/email-already-in-use':'Já existe uma conta com esse e-mail.','auth/weak-password':'A senha precisa ter pelo menos 6 caracteres.',
   'auth/invalid-email':'Esse e-mail não parece válido.','auth/too-many-requests':'Muitas tentativas. Espere um pouco e tente de novo.',
-  'auth/network-request-failed':'Sem conexão. Verifique sua internet.','local/reset':'No modo demonstração não há envio de e-mail; crie uma nova conta.'
+  'auth/network-request-failed':'Sem conexão. Verifique sua internet.','user/taken':'Esse nome de usuário já está em uso.','permission-denied':'Sem permissão para isso.','local/reset':'No modo demonstração não há envio de e-mail; crie uma nova conta.'
 };
 
 /* ---------------- Estado ---------------- */
-let S, books = [], cat = 'Todos', query = '', current = null, list = [], tab = 'in', form = {};
+let S, books = [], cat = 'Todos', query = '', current = null, list = [], tab = 'in', form = {}, viewing = null, pendingSignup = null, ptab = 'search';
+const UNAME = /^[a-z0-9._]{3,20}$/;
+const cleanU = v => v.trim().toLowerCase().replace(/^@/, '');
+const first = p => ((p && (p.name || p.username)) || '').split(' ')[0];
 
 /* ---------------- Login ---------------- */
 function showAuth(){ $('#app').classList.add('hide'); $('#ov').classList.add('hide'); $('#auth').classList.remove('hide'); setTab('in'); $('#aPass').value = ''; $('#demoNote').classList.toggle('hide', S.mode !== 'local'); }
-function setTab(t){ tab = t; document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t)); $('#nameRow').classList.toggle('hide', t !== 'up'); $('#aSubmit').textContent = t === 'up' ? 'Criar minha biblioteca' : 'Entrar'; $('#aPass').autocomplete = t === 'up' ? 'new-password' : 'current-password'; $('#aForgot').classList.toggle('hide', t === 'up'); $('#aMsg').textContent = ''; }
+function setTab(t){ tab = t; document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t)); $('#nameRow').classList.toggle('hide', t !== 'up'); $('#userRow').classList.toggle('hide', t !== 'up'); $('#aSubmit').textContent = t === 'up' ? 'Criar minha biblioteca' : 'Entrar'; $('#aPass').autocomplete = t === 'up' ? 'new-password' : 'current-password'; $('#aForgot').classList.toggle('hide', t === 'up'); $('#aMsg').textContent = ''; }
 document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => setTab(b.dataset.tab));
 $('#authForm').onsubmit = async e => {
   e.preventDefault(); const m = $('#aMsg'); m.className = 'msg';
   const email = $('#aEmail').value.trim().toLowerCase(), pass = $('#aPass').value, name = $('#aName').value.trim();
   if (!/^\S+@\S+\.\S+$/.test(email)) return m.textContent = ERR['auth/invalid-email'];
   if (pass.length < 6) return m.textContent = ERR['auth/weak-password'];
+  if (tab === 'up') {
+    const un = cleanU($('#aUser').value);
+    if (!UNAME.test(un)) return m.textContent = 'Nome de usuário: 3 a 20 caracteres, só letras minúsculas, números, ponto e _.';
+    try { if (await S.usernameTaken(un)) return m.textContent = ERR['user/taken']; } catch {}
+    pendingSignup = {username: un, name: name || un};
+  }
   $('#aSubmit').disabled = true; m.textContent = 'Abrindo a estante…'; m.className = 'msg ok';
   try { tab === 'up' ? await S.signUp(email, pass, name) : await S.signIn(email, pass); if (tab === 'up' && name) $('#owner').textContent = 'biblioteca de ' + name.split(' ')[0]; }
   catch (err) { m.className = 'msg'; m.textContent = ERR[err.code] || 'Não deu certo: ' + (err.message || err.code); }
@@ -408,11 +522,51 @@ $('#outBtn').onclick = () => S.signOut();
 /* ---------------- App ---------------- */
 async function enterApp(user){
   $('#auth').classList.add('hide'); $('#app').classList.remove('hide');
-  const first = (user.name || '').split(' ')[0];
-  $('#owner').textContent = 'biblioteca de ' + (first || 'você');
-  try { books = await S.list(); } catch (e) { books = []; toast('Não consegui carregar seus livros.'); }
-  type('Bem-vinda à minha biblioteca'); render();
+  try { S.profile = await S.getProfile(user.uid); } catch { S.profile = null; }
+  if (!S.profile && pendingSignup) { try { S.profile = await S.setProfile(pendingSignup); } catch (e) { toast(ERR[e.code] || 'Escolha outro nome de usuário.'); } }
+  pendingSignup = null;
+  await showMine();
+  if (!S.profile) openUserModal(true);
+  refreshRequests();
 }
+function setMode(visitor){
+  ['#addBtn', '#addBtn2'].forEach(x => $(x).classList.toggle('hide', visitor));
+  $('#backBtn').classList.toggle('hide', !visitor);
+}
+async function showMine(){
+  viewing = null; cat = 'Todos'; query = ''; $('#q').value = ''; setMode(false);
+  $('#owner').textContent = 'biblioteca de ' + (first(S.profile) || first(S.user) || 'você');
+  $('#handle').innerHTML = S.profile ? `@${esc(S.profile.username)}` : '';
+  try { books = await S.list(); } catch (e) { books = []; toast('Não consegui carregar seus livros.'); }
+  type('Bem-vinda à minha biblioteca'); render(); scrollTo({top: 0});
+}
+async function viewProfile(u, openId){
+  if (u === S.user.uid) return showMine();
+  let p = null, st = null;
+  try { [p, st] = await Promise.all([S.getProfile(u), S.statusWith(u)]); } catch {}
+  if (!p) return toast('Não encontrei esse perfil.');
+  viewing = {uid: u, profile: p, status: st}; cat = 'Todos'; query = ''; $('#q').value = ''; setMode(true);
+  books = [];
+  if (st === 'accepted') { try { books = await S.list(u); } catch { toast('Não consegui abrir essa biblioteca.'); } }
+  $('#owner').textContent = 'biblioteca de ' + first(p);
+  type('Biblioteca de ' + first(p)); drawHandle(); render(); closePeople(); scrollTo({top: 0});
+  if (openId) setTimeout(() => { const sp = document.querySelector(`.spine[data-id="${CSS.escape(openId)}"]`); openBook(openId, sp); }, 250);
+}
+function relLabel(st){ return st === 'accepted' ? 'Seguindo ✓' : st === 'pending' ? 'Solicitado' : 'Seguir'; }
+function drawHandle(){
+  const v = viewing; if (!v) return;
+  $('#handle').innerHTML = `<span>@${esc(v.profile.username)}</span><button class="sbtn ${v.status ? '' : 'pri'}" id="relBtn">${relLabel(v.status)}</button>`;
+  $('#relBtn').onclick = async e => {
+    const b = e.currentTarget;
+    try {
+      if (!v.status) { await S.follow(v.uid); v.status = 'pending'; toast('Pedido enviado'); }
+      else if (!b.dataset.sure) { b.dataset.sure = 1; b.textContent = v.status === 'pending' ? 'Cancelar pedido?' : 'Deixar de seguir?'; b.classList.add('warn'); setTimeout(() => { if (b.isConnected && b.dataset.sure) { delete b.dataset.sure; b.textContent = relLabel(v.status); b.classList.remove('warn'); } }, 3500); return; }
+      else { await S.unfollow(v.uid); v.status = null; books = []; toast('Pronto'); }
+    } catch (err) { toast(ERR[err.code] || 'Não deu certo.'); }
+    drawHandle(); render();
+  };
+}
+$('#backBtn').onclick = () => showMine();
 function type(txt){ const el = $('#typed'); el.textContent = ''; let i = 0; clearInterval(type.h); type.h = setInterval(() => { el.textContent = txt.slice(0, ++i); if (i >= txt.length) clearInterval(type.h); }, 55); }
 
 function filtered(){ const q = query.toLowerCase(); return books.filter(b => (cat === 'Todos' || b.category === cat) && (!q || [b.title, b.author, b.category].join(' ').toLowerCase().includes(q))); }
@@ -428,6 +582,13 @@ function spineHTML(b){
 function ghosts(){ return Array.from({length: 9}, (_, i) => `<span class="spine ghost" style="width:${28 + i % 3 * 8}px;height:${170 + i * 7 % 40}px"></span>`).join(''); }
 
 function render(){
+  const locked = viewing && viewing.status !== 'accepted';
+  ['#wrapRead', '#wrapTo', '#headTo', '#chips', '#q'].forEach(x => $(x).classList.toggle('hide', !!locked));
+  $('#lock').classList.toggle('hide', !locked);
+  if (locked) {
+    $('#lock').innerHTML = `<h3>Biblioteca privada</h3><p>Para ver os livros e as avaliações de @${esc(viewing.profile.username)}, ${viewing.status === 'pending' ? 'espere seu pedido ser aceito.' : 'envie um pedido para seguir. Essa pessoa precisa aceitar.'}</p>`;
+    $('#count').textContent = ''; list = []; return;
+  }
   const f = filtered(), read = f.filter(b => b.status !== 'quero').sort(sortRead), to = f.filter(b => b.status === 'quero').sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
   const year = new Date().getFullYear(), readYear = books.filter(b => b.status === 'lido' && (b.endDate || '').startsWith(year)).length;
   $('#count').textContent = `${books.length} ${books.length === 1 ? 'volume' : 'volumes'} · ${readYear} ${readYear === 1 ? 'lido' : 'lidos'} em ${year}`;
@@ -437,7 +598,7 @@ function render(){
   $('#cats').innerHTML = [...new Set([...DEFAULT_CATS, ...cats.slice(1)])].map(c => `<option value="${esc(c)}">`).join('');
   $('#shelfRead').innerHTML = read.length ? read.map(spineHTML).join('') : books.length
     ? `<p class="empty">Nenhum livro lido encontrado com esse filtro.</p>`
-    : ghosts() + `<div class="empty"><p>Sua estante está vazia.<br>Que tal colocar o primeiro livro?</p><button class="btn" data-act="add">+ Adicionar livro</button> <button class="btn ghost" data-act="seed">Ver com exemplos</button></div>`;
+    : viewing ? ghosts() + `<p class="empty">Ainda não há livros lidos nesta estante.</p>` : ghosts() + `<div class="empty"><p>Sua estante está vazia.<br>Que tal colocar o primeiro livro?</p><button class="btn" data-act="add">+ Adicionar livro</button> <button class="btn ghost" data-act="seed">Ver com exemplos</button></div>`;
   $('#shelfTo').innerHTML = to.length ? to.map(spineHTML).join('') : `<p class="empty">${books.some(b => b.status === 'quero') ? 'Nada encontrado aqui.' : 'Livros marcados como “Quero ler” aparecem nesta estante.'}</p>`;
   $('#countTo').textContent = `${books.filter(b => b.status === 'quero').length} livros`;
   list = [...read, ...to];
@@ -490,7 +651,7 @@ function fly(spine){
   }, 180);
 }
 function renderInfo(){
-  const b = current, fs = finalScore(b);
+  const b = current, fs = finalScore(b), ro = !!viewing;
   if (!b.ratings || !b.ratings.length) b.ratings = CRITERIA.map(label => ({label, value: null}));
   $('#info').innerHTML = `
     <span class="status mono">${STATUS[b.status] || ''}${b.status === 'lido' && b.endDate ? ' · ' + fmtDate(b.endDate) : ''}</span>
@@ -503,22 +664,24 @@ function renderInfo(){
       <div><span>Comecei em</span><b>${fmtDate(b.startDate)}</b></div>
       <div><span>Terminei em</span><b>${fmtDate(b.endDate)}</b></div>
     </div>
-    <div class="sec"><h3>Sinopse</h3><p class="syn">${b.synopsis ? esc(b.synopsis) : '<span style="color:var(--mute)">Sem sinopse ainda. Use “Editar” para adicionar.</span>'}</p></div>
-    <div class="sec"><h3>Minha avaliação</h3>
+    <div class="sec"><h3>Sinopse</h3><p class="syn">${b.synopsis ? esc(b.synopsis) : `<span style="color:var(--mute)">${ro ? 'Sem sinopse.' : 'Sem sinopse ainda. Use “Editar” para adicionar.'}</span>`}</p></div>
+    <div class="sec"><h3>${ro ? 'Avaliação de ' + esc(first(viewing.profile)) : 'Minha avaliação'}</h3>
       <div class="score"><div class="num" id="fsNum">${fmtNum(fs)}</div><div><span class="stars" aria-hidden="true"><i id="fsStars" style="width:${(fs || 0) / 5 * 100}%"></i></span><div class="of">Nota final · média dos critérios avaliados (0 a 5)</div></div></div>
-      <div id="rates">${b.ratings.map(rateRow).join('')}</div>
-      <button class="addcrit" id="addCrit">+ Adicionar critério</button>
+      <div id="rates">${b.ratings.map((r, i) => rateRow(r, i, ro)).join('')}</div>
+      ${ro ? '' : '<button class="addcrit" id="addCrit">+ Adicionar critério</button>'}
     </div>
-    <div class="sec"><h3>Meus comentários</h3><textarea class="field" id="cm" placeholder="O que ficou com você depois dessa leitura?">${esc(b.comments || '')}</textarea><div class="saved" id="saved"></div></div>
-    <div class="actions"><button class="btn ghost" id="editB">Editar dados</button><button class="btn ghost" id="delB">Excluir livro</button></div>`;
+    ${ro ? `<div class="sec"><h3>Comentários de ${esc(first(viewing.profile))}</h3><p class="ro-cm">${b.comments ? esc(b.comments) : '<span style="color:var(--mute)">Sem comentários.</span>'}</p></div>`
+    : `<div class="sec"><h3>Meus comentários</h3><textarea class="field" id="cm" placeholder="O que ficou com você depois dessa leitura?">${esc(b.comments || '')}</textarea><div class="saved" id="saved"></div></div>
+    <div class="actions"><button class="btn ghost" id="editB">Editar dados</button><button class="btn ghost" id="delB">Excluir livro</button></div>`}`;
   const i = list.findIndex(x => x.id === b.id);
   $('#prevB').disabled = i <= 0; $('#nextB').disabled = i < 0 || i >= list.length - 1;
   $('#prevB').style.opacity = i <= 0 ? .35 : 1; $('#nextB').style.opacity = i >= list.length - 1 ? .35 : 1;
   $('#lookB').href = 'https://www.google.com/search?q=' + encodeURIComponent(`${b.title} ${b.author} livro`);
-  bindInfo();
+  if (!ro) bindInfo();
 }
-function rateRow(r, i){
+function rateRow(r, i, ro){
   const v = r.value, custom = i >= CRITERIA.length || !CRITERIA.includes(r.label);
+  if (ro) return `<div class="rate"><div class="nm">${esc(r.label || 'Critério')}</div><input type="range" min="0" max="5" step="0.5" value="${v ?? 0}" disabled class="${v == null ? 'unset' : ''}" style="--p:${(v ?? 0) * 20}%" aria-label="Nota para ${esc(r.label)}"><output>${v == null ? '–' : fmtNum(v)}</output><span></span></div>`;
   return `<div class="rate" data-i="${i}"><div class="nm">${custom ? `<input value="${esc(r.label)}" aria-label="Nome do critério" placeholder="Nome do critério">` : esc(r.label)}</div>
     <input type="range" min="0" max="5" step="0.5" value="${v ?? 0}" class="${v == null ? 'unset' : ''}" style="--p:${(v ?? 0) * 20}%" aria-label="Nota para ${esc(r.label)}">
     <output>${v == null ? '–' : fmtNum(v)}</output><button class="x" title="${custom ? 'Remover critério' : 'Limpar nota'}" aria-label="${custom ? 'Remover critério' : 'Limpar nota'}">×</button></div>`;
@@ -558,6 +721,8 @@ function step(d){ const i = list.findIndex(x => x.id === current.id), n = list[i
 $('#closeB').onclick = closeBook; $('#prevB').onclick = () => step(-1); $('#nextB').onclick = () => step(1);
 document.addEventListener('keydown', e => {
   if (!$('#fm').classList.contains('hide')) { if (e.key === 'Escape') closeForm(); return; }
+  if (!$('#um').classList.contains('hide')) return;
+  if (!current && !$('#pp').classList.contains('hide')) { if (e.key === 'Escape') closePeople(); return; }
   if (!current || ['INPUT','TEXTAREA'].includes(document.activeElement.tagName)) return;
   if (e.key === 'Escape') closeBook(); if (e.key === 'ArrowLeft') step(-1); if (e.key === 'ArrowRight') step(1);
 });
@@ -632,6 +797,101 @@ $('#results').onclick = e => {
   const th = (v.imageLinks?.thumbnail || '').replace('http:', 'https:').replace('&edge=curl', '');
   if (th) { form.cover = th; $('#fUrl').value = th; drawCover(); }
   $('#results').innerHTML = '<small style="color:var(--mute)">Preenchido. Confira e ajuste o que quiser.</small>';
+};
+
+/* ---------------- Pessoas ---------------- */
+async function refreshRequests(){
+  try { const n = (await S.followers(S.user.uid)).filter(x => x.status === 'pending').length;
+    ['#reqBadge', '#reqBadge2'].forEach(x => { $(x).textContent = n; $(x).classList.toggle('hide', !n); }); } catch {}
+}
+function openPeople(t){ if (t) ptab = t; const pp = $('#pp'); pp.classList.remove('hide'); pp.scrollTop = 0; requestAnimationFrame(() => pp.classList.add('open')); document.body.style.overflow = 'hidden'; drawPeople(); refreshRequests(); }
+function closePeople(){ const pp = $('#pp'); if (pp.classList.contains('hide')) return; pp.classList.remove('open'); document.body.style.overflow = ''; setTimeout(() => pp.classList.add('hide'), 300); }
+$('#peopleBtn').onclick = () => openPeople();
+$('#ppClose').onclick = closePeople;
+$('#ptabs').onclick = e => { const b = e.target.closest('[data-pt]'); if (b) { ptab = b.dataset.pt; drawPeople(); } };
+function avatar(p){ const c = PALETTE[hash(p.uid) % PALETTE.length]; return `<span class="av" style="background:${c};color:${textOn(c)}">${esc(((p.name || p.username || '?')[0] || '?').toUpperCase())}</span>`; }
+function urow(p, acts){ return `<div class="urow" data-uid="${esc(p.uid)}">${avatar(p)}<div class="who2"><b>${esc(p.name || p.username || 'Leitor(a)')}</b><small>@${esc(p.username || '')}</small></div><div class="acts">${acts}</div></div>`; }
+const A = (a, t, cls = '') => `<button class="sbtn ${cls}" data-a="${a}">${t}</button>`;
+function relBtns(st){ return A('view', 'Ver') + (st === 'accepted' ? A('unfollow', 'Seguindo ✓') : st === 'pending' ? A('unfollow', 'Solicitado') : A('follow', 'Seguir', 'pri')); }
+async function drawPeople(){
+  const me = S.user.uid, body = $('#pbody');
+  $('#meLine').innerHTML = S.profile ? `<span>Você é <b>@${esc(S.profile.username)}</b></span><button class="sbtn" id="editProf">Editar perfil</button>` : `<button class="sbtn pri" id="editProf">Criar nome de usuário</button>`;
+  $('#editProf').onclick = () => openUserModal(false);
+  document.querySelectorAll('#ptabs [data-pt]').forEach(b => b.classList.toggle('on', b.dataset.pt === ptab));
+  const tabNow = ptab;
+  if (ptab === 'search') {
+    body.innerHTML = `<input class="field" id="ps" placeholder="Buscar por @nome de usuário" autocapitalize="none" spellcheck="false" aria-label="Buscar pessoas"><div id="psr"><p class="pempty">Digite o começo do nome de usuário de alguém.</p></div>`;
+    const inp = $('#ps'); inp.focus();
+    inp.oninput = () => { clearTimeout(inp.h); inp.h = setTimeout(async () => {
+      const q = cleanU(inp.value), out = $('#psr'); if (!q) { out.innerHTML = '<p class="pempty">Digite o começo do nome de usuário de alguém.</p>'; return; }
+      try { const found = (await S.findUsers(q)).filter(p => p.uid !== me);
+        const sts = await Promise.all(found.map(p => S.statusWith(p.uid).catch(() => null)));
+        if (inp.value && cleanU(inp.value) === q) out.innerHTML = found.length ? found.map((p, i) => urow(p, relBtns(sts[i]))).join('') : `<p class="pempty">Ninguém encontrado com “${esc(q)}”.</p>`;
+      } catch { out.innerHTML = '<p class="pempty">Não consegui buscar agora.</p>'; }
+    }, 300); };
+    return;
+  }
+  body.innerHTML = '<p class="pempty">Carregando…</p>';
+  try {
+    let html = '';
+    if (ptab === 'req') {
+      const r = (await S.followers(me)).filter(x => x.status === 'pending');
+      html = r.length ? r.map(p => urow(p, A('accept', 'Permitir', 'pri') + A('decline', 'Recusar'))).join('') : '<p class="pempty">Nenhum pedido para seguir no momento.</p>';
+    } else if (ptab === 'followers') {
+      const r = (await S.followers(me)).filter(x => x.status === 'accepted');
+      html = r.length ? r.map(p => urow(p, A('view', 'Ver') + A('remove', 'Remover'))).join('') : '<p class="pempty">Você ainda não tem seguidores.</p>';
+    } else if (ptab === 'following') {
+      const r = await S.following(me);
+      html = r.length ? r.map(p => urow(p, relBtns(p.status))).join('') : '<p class="pempty">Você ainda não segue ninguém. Use “Buscar” para encontrar pessoas.</p>';
+    } else if (ptab === 'feed') {
+      const fol = (await S.following(me)).filter(x => x.status === 'accepted');
+      const lists = await Promise.all(fol.map(p => S.list(p.uid).then(bs => bs.map(b => ({b, p}))).catch(() => [])));
+      const items = lists.flat().filter(x => x.b.status !== 'quero').sort((x, y) => (y.b.endDate || y.b.updatedAt || '').localeCompare(x.b.endDate || x.b.updatedAt || '')).slice(0, 40);
+      html = items.length ? items.map(({b, p}) => { const fs = finalScore(b), c = b.color || PALETTE[hash(b.id + b.title) % PALETTE.length];
+        return `<button class="feed-item" data-uid="${esc(p.uid)}" data-book="${esc(b.id)}"><span class="mini" style="background:${c}">${b.cover ? `<img src="${esc(b.cover)}" alt="" onerror="this.remove()">` : ''}</span><span><b>${esc(first(p))}</b> ${b.status === 'lendo' ? 'está lendo' : 'leu'} <i>${esc(b.title)}</i><small>${esc(b.author)}${b.endDate ? ' · ' + fmtDate(b.endDate) : ''}</small></span>${fs != null ? `<span class="sc">${fmtNum(fs)}</span>` : ''}</button>`; }).join('')
+        : `<p class="pempty">${fol.length ? 'As pessoas que você segue ainda não registraram leituras.' : 'Quando você seguir alguém e o pedido for aceito, as leituras e notas aparecem aqui.'}</p>`;
+    }
+    if (ptab === tabNow) body.innerHTML = html;
+  } catch (e) { body.innerHTML = '<p class="pempty">Não consegui carregar agora.</p>'; }
+}
+$('#pbody').onclick = async e => {
+  const fi = e.target.closest('.feed-item'); if (fi) return viewProfile(fi.dataset.uid, fi.dataset.book);
+  const b = e.target.closest('[data-a]'); if (!b) return;
+  const u = b.closest('.urow').dataset.uid, a = b.dataset.a;
+  if (a === 'view') return viewProfile(u);
+  if (['unfollow', 'remove', 'decline'].includes(a) && !b.dataset.sure) {
+    b.dataset.sure = 1; b.textContent = a === 'unfollow' ? (b.textContent === 'Solicitado' ? 'Cancelar pedido?' : 'Deixar de seguir?') : a === 'remove' ? 'Remover mesmo?' : 'Recusar mesmo?'; b.classList.add('warn'); return;
+  }
+  b.disabled = true;
+  try {
+    if (a === 'follow') { await S.follow(u); toast('Pedido enviado'); }
+    if (a === 'unfollow') await S.unfollow(u);
+    if (a === 'accept') { await S.accept(u); toast('Agora essa pessoa pode ver sua biblioteca'); }
+    if (a === 'decline' || a === 'remove') await S.removeFollower(u);
+  } catch (err) { toast(ERR[err.code] || 'Não deu certo.'); }
+  if (ptab === 'search') { const r = b.closest('.urow'), st = await S.statusWith(u).catch(() => null); r.querySelector('.acts').innerHTML = relBtns(st); }
+  else drawPeople();
+  refreshRequests();
+};
+
+/* ---------------- Perfil (nome de usuário) ---------------- */
+let umForced = false;
+function openUserModal(forced){
+  umForced = forced; $('#uCancel').classList.toggle('hide', forced);
+  $('#uName').value = S.profile?.name || S.user?.name || ''; $('#uUser').value = S.profile?.username || ''; $('#uMsg').textContent = '';
+  $('#um').classList.remove('hide'); setTimeout(() => $(S.profile ? '#uName' : '#uUser').focus(), 50);
+}
+$('#uCancel').onclick = () => $('#um').classList.add('hide');
+$('#userForm').onsubmit = async e => {
+  e.preventDefault(); const m = $('#uMsg'), un = cleanU($('#uUser').value), nm = $('#uName').value.trim();
+  if (!nm) return m.textContent = 'Coloque seu nome.';
+  if (!UNAME.test(un)) return m.textContent = 'Nome de usuário: 3 a 20 caracteres, só letras minúsculas, números, ponto e _.';
+  $('#uSave').disabled = true; m.textContent = '';
+  try { S.profile = await S.setProfile({username: un, name: nm}); $('#um').classList.add('hide'); toast('Perfil salvo');
+    if (!viewing) { $('#handle').innerHTML = '@' + esc(un); $('#owner').textContent = 'biblioteca de ' + first(S.profile); }
+    if (!$('#pp').classList.contains('hide')) drawPeople();
+  } catch (err) { m.textContent = ERR[err.code] || 'Não consegui salvar: ' + (err.message || err.code); }
+  $('#uSave').disabled = false;
 };
 
 /* Exemplos para ver a estante funcionando */
