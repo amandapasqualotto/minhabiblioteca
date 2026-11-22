@@ -272,6 +272,8 @@ input[type=range].unset::-webkit-slider-thumb{border-color:var(--line)}
 @media(max-width:560px){.tcard{flex-wrap:wrap}.tcard .acts{width:100%;justify-content:flex-start;padding-left:68px}}
 .help-link{border:0;background:none;color:var(--mute);font-size:14px;text-decoration:underline;min-height:40px;width:100%}
 .mail{font:500 15px var(--mono);word-break:break-all;background:var(--bg2);padding:10px 14px;border-radius:10px;display:block;margin:6px 0 0}
+.logout-bottom{display:none}
+@media(max-width:600px){#outBtn{display:none}.logout-bottom{display:flex;justify-content:center;padding:48px 16px 24px}.logout-bottom .pill{min-width:160px;justify-content:center}}
 .ro-cm{font:400 19px/1.5 var(--serif);white-space:pre-line;margin:0}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -341,6 +343,8 @@ input[type=range].unset::-webkit-slider-thumb{border-color:var(--line)}
     </div>
     <div class="tbr-list" id="tbrList"></div>
   </section>
+
+  <div class="logout-bottom"><button class="pill mono" id="outBtn2">Sair da conta</button></div>
 
   <div class="bar">
     <div class="who">Esta é a<br><b id="owner">sua biblioteca</b></div>
@@ -704,7 +708,7 @@ $('#aForgot').onclick = async () => {
   try { await S.reset(email); m.className = 'msg ok'; m.textContent = 'Enviamos um link de redefinição para ' + email + '.'; }
   catch (err) { m.className = 'msg'; m.textContent = ERR[err.code] || err.message; }
 };
-$('#outBtn').onclick = () => S.signOut();
+$('#outBtn').onclick = $('#outBtn2').onclick = () => S.signOut();
 
 /* ---------------- App ---------------- */
 async function enterApp(user){
