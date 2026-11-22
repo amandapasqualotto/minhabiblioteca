@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Minha Biblioteca</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/*
+VOICE: calma, literária, silenciosa como uma sala de leitura.
+IDEA: uma estante de verdade — lombadas que você puxa para ler a ficha do livro.
+PICTURE: a própria estante horizontal de lombadas, com sombra e luz de lado.
+COLOUR and TYPE: papel cinza-pérola, tinta grafite; as cores vêm dos próprios livros. Cormorant itálico + Inter + mono miúdo.
+LAYOUT: título central, busca, categorias, estante; ficha do livro em painel que desliza.
+*/
+:root{color-scheme:light dark;
+--bg:light-dark(#efeeeb,#121211);--bg2:light-dark(#e2e1dd,#0b0b0a);
+--ink:light-dark(#1d1d1b,#ecebe6);--mute:light-dark(#77746d,#9a978f);--line:light-dark(#d3d1cb,#2a2a28);
+--card:light-dark(rgba(255,255,255,.62),rgba(32,32,30,.7));--solid:light-dark(#fbfaf8,#1b1b1a);
+--accent:light-dark(#9b3b2e,#e0846f);--shadow:light-dark(rgba(40,35,25,.28),rgba(0,0,0,.7));
+--serif:"Cormorant Garamond",Georgia,serif;--sans:Inter,system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{height:100%}
+body{margin:0;background:radial-gradient(120% 80% at 50% 0%,var(--bg),var(--bg2));background-attachment:fixed;color:var(--ink);font:16px/1.55 var(--sans);overflow-x:clip;-webkit-font-smoothing:antialiased}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+.hide{display:none!important}
+.mono{font:500 12.5px/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase}
+.pill{border:1px solid var(--line);background:var(--card);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:999px;padding:9px 16px;min-height:40px;display:inline-flex;align-items:center;gap:8px;transition:.2s}
+.pill:hover{border-color:var(--mute)}
+.pill.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.pill:focus-visible,.field:focus-visible,.spine:focus-visible,.btn:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.btn{border:0;border-radius:999px;padding:12px 22px;min-height:44px;background:var(--ink);color:var(--bg);font-weight:600}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn.danger{background:var(--accent);color:#fff}
+.field{width:100%;border:1px solid var(--line);background:var(--solid);border-radius:12px;padding:11px 13px;font-size:16px;min-height:44px}
+textarea.field{min-height:110px;resize:vertical;line-height:1.5}
+label.lb{display:block;font-size:13px;color:var(--mute);margin:0 0 5px}
+
+/* ---------- login ---------- */
+#auth{min-height:100%;display:grid;place-items:center;padding:32px 18px}
+.auth-box{width:min(420px,100%);text-align:center}
+.auth-box h1{font:italic 400 clamp(40px,8vw,56px)/1.02 var(--serif);margin:0 0 6px;text-wrap:balance}
+.auth-box .sub{color:var(--mute);margin:0 0 26px}
+.auth-card{background:var(--card);border:1px solid var(--line);backdrop-filter:blur(14px);border-radius:22px;padding:22px;text-align:left;box-shadow:0 30px 60px -30px var(--shadow)}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--bg2);padding:4px;border-radius:999px;margin-bottom:18px}
+.tabs button{border:0;background:transparent;border-radius:999px;min-height:40px}
+.tabs button.on{background:var(--solid);box-shadow:0 2px 8px -4px var(--shadow);font-weight:600}
+.auth-card .row{margin-bottom:12px}
+.msg{font-size:14px;min-height:20px;margin:6px 0 10px;color:var(--accent)}
+.msg.ok{color:light-dark(#2d6a4f,#7fcfa5)}
+.demo-note{font-size:13px;color:var(--mute);margin-top:16px;line-height:1.45}
+.mini-shelf{display:flex;justify-content:center;align-items:flex-end;gap:3px;height:92px;margin:0 auto 22px}
+.mini-shelf i{display:block;width:16px;border-radius:2px 2px 1px 1px;box-shadow:inset -3px 0 6px rgba(0,0,0,.2),0 8px 12px -6px var(--shadow)}
+
+/* ---------- app ---------- */
+#app{min-height:100%;display:flex;flex-direction:column;padding-bottom:110px}
+.top{display:flex;justify-content:center;gap:8px;padding:18px 16px 0;flex-wrap:wrap}
+.hero{text-align:center;padding:clamp(26px,5vw,52px) 18px 8px}
+.hero h1{font:italic 400 clamp(40px,7.5vw,64px)/1.03 var(--serif);margin:0;text-wrap:balance;min-height:2.1em}
+.caret{display:inline-block;width:1px;height:.9em;background:var(--ink);margin-left:3px;vertical-align:-.08em;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.hero .count{color:var(--accent);margin:14px 0 18px}
+.search{display:block;margin:20px auto 0;width:min(440px,90%);border:0;border-bottom:1px solid var(--line);background:transparent;text-align:center;font:italic 400 20px var(--serif);padding:8px;min-height:44px}
+.search:focus{outline:none;border-color:var(--ink)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:18px max(5vw,16px) 6px;scrollbar-width:none;justify-content:safe center}
+.chips::-webkit-scrollbar{display:none}
+.chips .pill{flex:none;font:500 12px var(--mono);letter-spacing:.07em;text-transform:uppercase;min-height:36px;padding:7px 14px}
+
+.shelf-wrap{position:relative;margin-top:14px}
+.shelf-head{display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:20px 16px 4px}
+.shelf-head .mono{color:var(--mute)}
+.shelf-head h2{font:italic 400 32px/1.1 var(--serif);margin:6px 0 2px}
+.shelf-head small{color:var(--mute);font-size:13px}
+.shelf{display:flex;align-items:flex-end;gap:3px;overflow-x:auto;overflow-y:visible;padding:46px max(5vw,18px) 0;scrollbar-width:none;scroll-behavior:smooth;min-height:260px;position:relative;justify-content:safe center}
+.shelf::-webkit-scrollbar{display:none}
+.plank{height:16px;margin:0 max(3vw,10px);border-radius:3px;background:linear-gradient(light-dark(#d9d6cf,#2a2926),light-dark(#c9c5bc,#1f1e1c));box-shadow:0 18px 30px -14px var(--shadow),inset 0 1px 0 light-dark(rgba(255,255,255,.7),rgba(255,255,255,.06))}
+.arrow{position:absolute;top:50%;translate:0 -50%;z-index:3;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--card);backdrop-filter:blur(8px);display:grid;place-items:center;font-size:18px}
+.arrow.l{left:8px}.arrow.r{right:8px}
+@media(max-width:600px){.arrow{display:none}}
+
+.spine{flex:none;position:relative;border:0;padding:0;border-radius:3px 3px 1px 1px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;overflow:hidden;transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s;box-shadow:inset 4px 0 6px -3px rgba(255,255,255,.35),inset -6px 0 10px -4px rgba(0,0,0,.35),0 10px 14px -8px var(--shadow);transform-origin:bottom center}
+.spine:hover{transform:translateY(-14px)}
+.spine.pull{transform:translateY(-40px) scale(1.03)}
+.spine .t{writing-mode:vertical-rl;transform:rotate(180deg);flex:1;display:flex;align-items:center;justify-content:center;padding:10px 0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-height:100%;line-height:1}
+.spine .t span{overflow:hidden;text-overflow:ellipsis}
+.spine .a{writing-mode:vertical-rl;transform:rotate(180deg);font:500 9.5px var(--sans);letter-spacing:.06em;text-transform:uppercase;opacity:.75;padding:4px 0 8px;max-height:40%;overflow:hidden;white-space:nowrap}
+.spine .band{position:absolute;left:0;right:0;height:2px;background:currentColor;opacity:.35}
+.spine .rib{position:absolute;top:-1px;right:5px;width:7px;height:26px;background:var(--accent);clip-path:polygon(0 0,100% 0,100% 100%,50% 75%,0 100%)}
+.spine.ghost{background:repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px 100%);opacity:.5;box-shadow:none}
+.empty{flex:1;text-align:center;align-self:center;color:var(--mute);padding:0 20px 40px}
+.empty .btn{margin-top:12px}
+
+.bar{position:fixed;left:50%;translate:-50% 0;bottom:max(16px,env(safe-area-inset-bottom));width:min(560px,calc(100% - 28px));display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 8px 8px 20px;border-radius:999px;background:var(--card);border:1px solid var(--line);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 20px 40px -20px var(--shadow);z-index:20}
+.bar .who{font:500 12px/1.35 var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--mute)}
+.bar .who b{color:var(--ink);font-weight:500}
+.bar .btn{padding:10px 18px}
+
+/* ---------- detalhe ---------- */
+.overlay{position:fixed;inset:0;z-index:40;background:light-dark(rgba(239,238,235,.82),rgba(10,10,9,.82));backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);opacity:0;transition:opacity .3s;overflow-y:auto;overscroll-behavior:contain}
+.overlay.open{opacity:1}
+.sheet{max-width:980px;margin:0 auto;padding:clamp(22px,4vw,48px) max(5vw,18px) 120px;display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:clamp(22px,4vw,52px);align-items:start}
+@media(max-width:720px){.sheet{grid-template-columns:minmax(0,1fr)}.cover-slot{position:relative!important;top:0;justify-self:center;width:min(220px,62vw)!important}}
+.cover-slot{position:sticky;top:24px;width:100%;aspect-ratio:2/3;perspective:1200px}
+.cover{width:100%;height:100%;border-radius:4px 8px 8px 4px;overflow:hidden;position:relative;box-shadow:0 34px 50px -24px var(--shadow),inset 6px 0 10px -6px rgba(0,0,0,.4);display:flex;flex-direction:column;justify-content:space-between;padding:12% 10%;text-align:center}
+.cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cover::after{content:"";position:absolute;inset:0 auto 0 0;width:7%;background:linear-gradient(90deg,rgba(0,0,0,.25),rgba(255,255,255,.12),transparent)}
+.cover .ct{font:500 clamp(22px,3vw,30px)/1.1 var(--serif);text-wrap:balance}
+.cover .ca{font:500 11px var(--sans);letter-spacing:.12em;text-transform:uppercase;opacity:.8}
+.cover .orn{width:40%;height:1px;background:currentColor;opacity:.4;margin:0 auto}
+.flyer{position:fixed;z-index:60;pointer-events:none;transform-style:preserve-3d}
+.info .status{color:var(--mute)}
+.info h2{font:400 clamp(32px,4.6vw,46px)/1.06 var(--serif);margin:8px 0 6px;text-wrap:balance}
+.info .author{font:italic 400 22px var(--serif);color:var(--accent);margin:0 0 18px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:0;background:var(--solid);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin:0 0 22px}
+.facts div{padding:11px 14px;box-shadow:1px 0 0 var(--line),0 1px 0 var(--line)}
+.facts span{display:block;font-size:12.5px;color:var(--mute)}
+.facts b{font-weight:500;font-size:15px;white-space:nowrap}
+.sec{margin:26px 0 0}
+.sec h3{font:600 13px var(--sans);letter-spacing:.02em;margin:0 0 10px;color:var(--mute)}
+.syn{font:400 19px/1.5 var(--serif);margin:0;white-space:pre-line}
+.score{display:flex;align-items:center;gap:18px;padding:16px 18px;border:1px solid var(--line);background:var(--solid);border-radius:16px;margin-bottom:12px}
+.score .num{font:500 54px/1 var(--serif);font-variant-numeric:tabular-nums}
+.score .of{color:var(--mute);font-size:14px}
+.stars{position:relative;display:inline-block;font-size:20px;letter-spacing:3px;color:var(--line);line-height:1}
+.stars::before{content:"★★★★★"}
+.stars i{position:absolute;inset:0 auto 0 0;overflow:hidden;color:var(--accent);white-space:nowrap;font-style:normal}
+.stars i::before{content:"★★★★★"}
+.rate{display:grid;grid-template-columns:minmax(0,1fr) minmax(110px,190px) 46px 30px;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+.rate .nm{font-size:15px}
+.rate .nm input{border:0;background:transparent;width:100%;font-size:15px;padding:4px 0;min-height:36px}
+.rate output{font:500 15px var(--mono);text-align:right;font-variant-numeric:tabular-nums}
+.rate .x{border:0;background:transparent;color:var(--mute);width:30px;height:36px;font-size:18px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:28px;background:transparent}
+input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:4px;background:linear-gradient(90deg,var(--accent) var(--p,0%),var(--line) var(--p,0%))}
+input[type=range]::-moz-range-track{height:4px;border-radius:4px;background:linear-gradient(90deg,var(--accent) var(--p,0%),var(--line) var(--p,0%))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--solid);border:2px solid var(--accent);margin-top:-8px}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--solid);border:2px solid var(--accent)}
+input[type=range].unset::-webkit-slider-thumb{border-color:var(--line)}
+@media(max-width:520px){.rate{grid-template-columns:minmax(0,1fr) 46px 30px}.rate input[type=range]{grid-column:1/-1;grid-row:2}}
+.addcrit{border:0;background:transparent;color:var(--accent);padding:10px 0;min-height:44px;font-weight:500}
+.saved{font-size:13px;color:var(--mute);min-height:20px;margin-top:6px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:24px}
+.navbar{position:fixed;left:50%;translate:-50% 0;bottom:max(16px,env(safe-area-inset-bottom));z-index:45;display:flex;gap:4px;padding:6px;border-radius:999px;background:var(--card);border:1px solid var(--line);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 20px 40px -20px var(--shadow);max-width:calc(100% - 20px)}
+.navbar a,.navbar button{border:0;background:transparent;border-radius:999px;padding:10px 14px;min-height:44px;display:inline-flex;align-items:center;font:500 12px var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--ink);text-decoration:none;white-space:nowrap}
+.navbar a:hover,.navbar button:hover{background:var(--bg2)}
+@media(max-width:420px){.navbar a,.navbar button{padding:10px 10px;font-size:11px}}
+
+/* ---------- formulário ---------- */
+.modal{position:fixed;inset:0;z-index:70;display:grid;place-items:center;padding:16px;background:rgba(0,0,0,.35);backdrop-filter:blur(6px)}
+.form{width:min(720px,100%);max-height:calc(100dvh - 32px);overflow-y:auto;background:var(--solid);border-radius:22px;padding:clamp(18px,3vw,30px);box-shadow:0 40px 80px -30px rgba(0,0,0,.5)}
+.form h2{font:italic 400 34px/1.1 var(--serif);margin:0 0 4px}
+.form .hint{color:var(--mute);font-size:14px;margin:0 0 18px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.grid .full{grid-column:1/-1}
+@media(max-width:560px){.grid{grid-template-columns:minmax(0,1fr)}}
+.lookup{display:flex;gap:8px}
+.results{display:grid;gap:6px;margin-top:8px}
+.results button{display:flex;gap:12px;align-items:center;text-align:left;border:1px solid var(--line);background:transparent;border-radius:12px;padding:8px;min-height:44px}
+.results img{width:34px;height:50px;object-fit:cover;border-radius:2px;background:var(--bg2);flex:none}
+.results small{display:block;color:var(--mute)}
+.cover-pick{display:flex;gap:14px;align-items:center}
+.cover-pick .prev{width:64px;aspect-ratio:2/3;border-radius:3px;background:var(--bg2);overflow:hidden;flex:none;display:grid;place-items:center;font-size:11px;color:var(--mute)}
+.cover-pick .prev img{width:100%;height:100%;object-fit:cover}
+.swatches{display:flex;gap:6px;flex-wrap:wrap}
+.swatches button{width:30px;height:30px;border-radius:50%;border:2px solid transparent}
+.swatches button.on{border-color:var(--ink);outline:2px solid var(--solid);outline-offset:-4px}
+.form-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:22px;flex-wrap:wrap}
+.toast{position:fixed;top:18px;left:50%;translate:-50% 0;z-index:90;background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:14px;opacity:0;transition:.3s;pointer-events:none}
+.toast.show{opacity:1}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<!-- ================= LOGIN ================= -->
+<section id="auth" class="hide">
+  <div class="auth-box">
+    <div class="mini-shelf" aria-hidden="true">
+      <i style="height:70px;background:#24577a"></i><i style="height:84px;background:#8c2f2f;width:20px"></i><i style="height:62px;background:#c9b37e"></i><i style="height:90px;background:#1e1e1e;width:22px"></i><i style="height:76px;background:#3d6b5c"></i><i style="height:66px;background:#d6336c;width:13px"></i><i style="height:82px;background:#e8e4d8"></i>
+    </div>
+    <h1>Minha biblioteca</h1>
+    <p class="sub">Entre para abrir sua estante.</p>
+    <form class="auth-card" id="authForm" novalidate>
+      <div class="tabs" role="tablist">
+        <button type="button" class="on" data-tab="in">Entrar</button>
+        <button type="button" data-tab="up">Criar conta</button>
+      </div>
+      <div class="row hide" id="nameRow"><label class="lb" for="aName">Seu nome</label><input class="field" id="aName" autocomplete="name" placeholder="Amanda"></div>
+      <div class="row"><label class="lb" for="aEmail">E-mail</label><input class="field" id="aEmail" type="email" autocomplete="email" required></div>
+      <div class="row"><label class="lb" for="aPass">Senha</label><input class="field" id="aPass" type="password" autocomplete="current-password" minlength="6" required></div>
+      <div class="msg" id="aMsg" role="status"></div>
+      <button class="btn" style="width:100%" id="aSubmit">Entrar</button>
+      <button type="button" class="addcrit" id="aForgot" style="width:100%">Esqueci minha senha</button>
+      <p class="demo-note hide" id="demoNote">Modo demonstração: a conta e os livros ficam salvos só neste navegador. Para login real e acesso de qualquer aparelho, publique com o Firebase configurado.</p>
+    </form>
+  </div>
+</section>
+
+<!-- ================= APP ================= -->
+<main id="app" class="hide">
+  <nav class="top">
+    <button class="pill mono" id="addBtn">+ Adicionar livro</button>
+    <button class="pill mono" id="outBtn">Sair</button>
+  </nav>
+  <header class="hero">
+    <h1><span id="typed"></span><span class="caret"></span></h1>
+    <div class="count mono" id="count"></div>
+    <input class="search" id="q" placeholder="O que você procura?" aria-label="Buscar livro, autor ou categoria">
+  </header>
+  <div class="chips" id="chips"></div>
+
+  <section class="shelf-wrap" id="wrapRead">
+    <button class="arrow l" data-dir="-1" aria-label="Rolar estante para a esquerda">‹</button>
+    <div class="shelf" id="shelfRead"></div>
+    <button class="arrow r" data-dir="1" aria-label="Rolar estante para a direita">›</button>
+    <div class="plank"></div>
+  </section>
+
+  <div class="shelf-head" id="headTo">
+    <span class="mono">Próximas leituras</span>
+    <h2>Estante quero ler</h2>
+    <small id="countTo"></small>
+  </div>
+  <section class="shelf-wrap" id="wrapTo">
+    <button class="arrow l" data-dir="-1" aria-label="Rolar estante para a esquerda">‹</button>
+    <div class="shelf" id="shelfTo"></div>
+    <button class="arrow r" data-dir="1" aria-label="Rolar estante para a direita">›</button>
+    <div class="plank"></div>
+  </section>
+
+  <div class="bar">
+    <div class="who">Esta é a<br><b id="owner">sua biblioteca</b></div>
+    <button class="btn" id="addBtn2">+ Novo livro</button>
+  </div>
+</main>
+
+<!-- ================= DETALHE ================= -->
+<div class="overlay hide" id="ov" role="dialog" aria-modal="true" aria-labelledby="dTitle">
+  <div class="sheet">
+    <div class="cover-slot" id="slot"></div>
+    <div class="info" id="info"></div>
+  </div>
+  <nav class="navbar">
+    <button id="prevB">← Anterior</button>
+    <button id="nextB">Próximo →</button>
+    <a id="lookB" href="#" target="_blank" rel="noopener">Pesquisar ↗</a>
+    <button id="closeB">Fechar</button>
+  </nav>
+</div>
+
+<!-- ================= FORM ================= -->
+<div class="modal hide" id="fm">
+  <form class="form" id="bookForm" novalidate>
+    <h2 id="fTitle">Novo livro</h2>
+    <p class="hint">Busque pelo título para preencher automaticamente, ou preencha à mão.</p>
+    <div class="grid">
+      <div class="full" id="lookupBox">
+        <label class="lb" for="look">Buscar no Google Livros</label>
+        <div class="lookup"><input class="field" id="look" placeholder="Ex.: Dom Casmurro"><button type="button" class="btn ghost" id="lookGo">Buscar</button></div>
+        <div class="results" id="results"></div>
+      </div>
+      <div class="full"><label class="lb" for="fT">Título *</label><input class="field" id="fT" required></div>
+      <div><label class="lb" for="fA">Autor(a) *</label><input class="field" id="fA" required></div>
+      <div><label class="lb" for="fC">Categoria</label><input class="field" id="fC" list="cats" placeholder="Ex.: Romance"></div>
+      <div><label class="lb" for="fP">Publicado em (ano ou data)</label><input class="field" id="fP" placeholder="1899"></div>
+      <div><label class="lb" for="fN">Nº de páginas</label><input class="field" id="fN" type="number" min="1" inputmode="numeric"></div>
+      <div><label class="lb" for="fS">Status</label>
+        <select class="field" id="fS"><option value="lido">Lido</option><option value="lendo">Lendo agora</option><option value="quero">Quero ler</option></select></div>
+      <div></div>
+      <div><label class="lb" for="fI">Comecei a ler em</label><input class="field" id="fI" type="date"></div>
+      <div><label class="lb" for="fF">Terminei de ler em</label><input class="field" id="fF" type="date"></div>
+      <div class="full"><label class="lb" for="fY">Sinopse</label><textarea class="field" id="fY"></textarea></div>
+      <div class="full">
+        <span class="lb">Capa</span>
+        <div class="cover-pick">
+          <div class="prev" id="cPrev">sem capa</div>
+          <div style="flex:1;display:grid;gap:8px">
+            <input class="field" id="fUrl" placeholder="Link da imagem (opcional)">
+            <div style="display:flex;gap:8px;flex-wrap:wrap"><label class="btn ghost" style="display:inline-flex;align-items:center;cursor:pointer">Enviar foto<input type="file" accept="image/*" id="fFile" hidden></label><button type="button" class="btn ghost" id="cClear">Remover</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="full"><span class="lb">Cor da lombada</span><div class="swatches" id="sw"></div></div>
+    </div>
+    <div class="msg" id="fMsg"></div>
+    <div class="form-foot">
+      <button type="button" class="btn ghost" id="fCancel">Cancelar</button>
+      <button class="btn" id="fSave">Salvar na estante</button>
+    </div>
+  </form>
+</div>
+<datalist id="cats"></datalist>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   CONFIGURAÇÃO DO FIREBASE
+   Cole aqui o objeto firebaseConfig do seu projeto (Console do
+   Firebase → Configurações do projeto → Seus apps → Web).
+   Deixe null para usar o modo demonstração (salva no navegador).
+   ============================================================ */
+const FIREBASE_CONFIG = null;
+/* Exemplo:
+cconst firebaseConfig = {
+  apiKey: "AIzaSyAHbJtb4ku63Lq69TGG_FduvUmA9WS2vBQ",
+  authDomain: "minhabibliot.firebaseapp.com",
+  projectId: "minhabibliot",
+  storageBucket: "minhabibliot.firebasestorage.app",
+  messagingSenderId: "81440343556",
+  appId: "1:81440343556:web:6e990e55fb71f90b039751"
+};
+*/
+</script>
+<script>
+{
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const CRITERIA = ['Enredo','Desenvolvimento da leitura','Fluidez do texto','Ritmo da leitura','Organização dos capítulos','Construção de personagens / argumentos'];
+const DEFAULT_CATS = ['Romance','Ficção literária','Fantasia','Ficção científica','Mistério & suspense','Clássicos','Não ficção','Biografia','Filosofia','História','Direito','Tecnologia','Negócios','Autoajuda','Poesia','Religião'];
+const PALETTE = ['#1f2a44','#8c2f2f','#24577a','#2f4f4f','#c9b37e','#1e1e1e','#6b4e3d','#3d6b5c','#7a2e4f','#e8e4d8','#b5651d','#5a5f2a','#d4573b','#2b6cb0','#d6336c','#0f9d76','#a89f91','#f2c14e'];
+const STATUS = {lido:'Lido', lendo:'Lendo agora', quero:'Quero ler'};
+
+const toast = t => { const e = $('#toast'); e.textContent = t; e.classList.add('show'); clearTimeout(toast.h); toast.h = setTimeout(() => e.classList.remove('show'), 2200); };
+const hash = s => { let h = 2166136261; for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
+const lum = hex => { const n = parseInt(hex.slice(1), 16); const r = n >> 16, g = n >> 8 & 255, b = n & 255; return (0.299*r + 0.587*g + 0.114*b) / 255; };
+const textOn = hex => lum(hex) > 0.6 ? '#1d1d1b' : '#f6f4ef';
+const fmtDate = d => { if (!d) return '—'; const [y,m,dd] = d.split('-'); return dd ? `${dd}/${m}/${y}` : d; };
+const fmtNum = n => n == null ? '—' : n.toFixed(1).replace('.', ',');
+const finalScore = b => { const v = (b.ratings || []).map(r => r.value).filter(x => x != null); return v.length ? v.reduce((a, c) => a + c, 0) / v.length : null; };
+
+/* ---------------- Armazenamento: Firebase ou local ---------------- */
+const mem = {};
+const LS = {
+  get(k){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : (mem[k] ?? null); } catch { return mem[k] ?? null; } },
+  set(k, v){ mem[k] = v; try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  del(k){ delete mem[k]; try { localStorage.removeItem(k); } catch {} }
+};
+async function sha(s){ try { const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)); return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2,'0')).join(''); } catch { return 'h' + hash(s); } }
+
+const LocalStore = {
+  mode: 'local', user: null,
+  async init(cb){ const s = LS.get('lib_session'); const users = LS.get('lib_users') || {}; this.user = s && users[s] ? {email: s, name: users[s].name} : null; cb(this.user); this.cb = cb; },
+  async signUp(email, pass, name){ const users = LS.get('lib_users') || {}; if (users[email]) throw {code:'auth/email-already-in-use'}; const salt = uid(); users[email] = {name: name || email.split('@')[0], salt, hash: await sha(salt + pass)}; LS.set('lib_users', users); return this.signIn(email, pass); },
+  async signIn(email, pass){ const u = (LS.get('lib_users') || {})[email]; if (!u || u.hash !== await sha(u.salt + pass)) throw {code:'auth/invalid-credential'}; LS.set('lib_session', email); this.user = {email, name: u.name}; this.cb(this.user); },
+  async signOut(){ LS.del('lib_session'); this.user = null; this.cb(null); },
+  async reset(){ throw {code:'local/reset'}; },
+  key(){ return 'lib_books_' + this.user.email; },
+  async list(){ return LS.get(this.key()) || []; },
+  async save(b){ const all = await this.list(); const i = all.findIndex(x => x.id === b.id); i < 0 ? all.push(b) : all[i] = b; LS.set(this.key(), all); },
+  async remove(id){ LS.set(this.key(), (await this.list()).filter(x => x.id !== id)); }
+};
+
+async function makeFirebaseStore(cfg){
+  const V = '10.12.2', base = `https://www.gstatic.com/firebasejs/${V}/`;
+  const [A, U, F] = await Promise.all([import(base + 'firebase-app.js'), import(base + 'firebase-auth.js'), import(base + 'firebase-firestore.js')]);
+  const app = A.initializeApp(cfg), auth = U.getAuth(app), db = F.getFirestore(app);
+  return {
+    mode: 'firebase', user: null,
+    init(cb){ U.onAuthStateChanged(auth, u => { this.user = u ? {uid: u.uid, email: u.email, name: u.displayName || u.email.split('@')[0]} : null; cb(this.user); }); },
+    async signUp(email, pass, name){ const c = await U.createUserWithEmailAndPassword(auth, email, pass); if (name) await U.updateProfile(c.user, {displayName: name}); this.user = {uid: c.user.uid, email, name: name || email.split('@')[0]}; },
+    signIn: (e, p) => U.signInWithEmailAndPassword(auth, e, p),
+    signOut: () => U.signOut(auth),
+    reset: e => U.sendPasswordResetEmail(auth, e),
+    col(){ return F.collection(db, 'users', this.user.uid, 'books'); },
+    async list(){ const s = await F.getDocs(this.col()); return s.docs.map(d => ({id: d.id, ...d.data()})); },
+    save(b){ return F.setDoc(F.doc(this.col(), b.id), b); },
+    remove(id){ return F.deleteDoc(F.doc(this.col(), id)); }
+  };
+}
+
+const ERR = {
+  'auth/invalid-credential':'E-mail ou senha incorretos.','auth/wrong-password':'E-mail ou senha incorretos.','auth/user-not-found':'E-mail ou senha incorretos.',
+  'auth/email-already-in-use':'Já existe uma conta com esse e-mail.','auth/weak-password':'A senha precisa ter pelo menos 6 caracteres.',
+  'auth/invalid-email':'Esse e-mail não parece válido.','auth/too-many-requests':'Muitas tentativas. Espere um pouco e tente de novo.',
+  'auth/network-request-failed':'Sem conexão. Verifique sua internet.','local/reset':'No modo demonstração não há envio de e-mail; crie uma nova conta.'
+};
+
+/* ---------------- Estado ---------------- */
+let S, books = [], cat = 'Todos', query = '', current = null, list = [], tab = 'in', form = {};
+
+/* ---------------- Login ---------------- */
+function showAuth(){ $('#app').classList.add('hide'); $('#ov').classList.add('hide'); $('#auth').classList.remove('hide'); setTab('in'); $('#aPass').value = ''; $('#demoNote').classList.toggle('hide', S.mode !== 'local'); }
+function setTab(t){ tab = t; document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t)); $('#nameRow').classList.toggle('hide', t !== 'up'); $('#aSubmit').textContent = t === 'up' ? 'Criar minha biblioteca' : 'Entrar'; $('#aPass').autocomplete = t === 'up' ? 'new-password' : 'current-password'; $('#aForgot').classList.toggle('hide', t === 'up'); $('#aMsg').textContent = ''; }
+document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => setTab(b.dataset.tab));
+$('#authForm').onsubmit = async e => {
+  e.preventDefault(); const m = $('#aMsg'); m.className = 'msg';
+  const email = $('#aEmail').value.trim().toLowerCase(), pass = $('#aPass').value, name = $('#aName').value.trim();
+  if (!/^\S+@\S+\.\S+$/.test(email)) return m.textContent = ERR['auth/invalid-email'];
+  if (pass.length < 6) return m.textContent = ERR['auth/weak-password'];
+  $('#aSubmit').disabled = true; m.textContent = 'Abrindo a estante…'; m.className = 'msg ok';
+  try { tab === 'up' ? await S.signUp(email, pass, name) : await S.signIn(email, pass); if (tab === 'up' && name) $('#owner').textContent = 'biblioteca de ' + name.split(' ')[0]; }
+  catch (err) { m.className = 'msg'; m.textContent = ERR[err.code] || 'Não deu certo: ' + (err.message || err.code); }
+  $('#aSubmit').disabled = false;
+};
+$('#aForgot').onclick = async () => {
+  const m = $('#aMsg'), email = $('#aEmail').value.trim();
+  if (!email) { m.className = 'msg'; return m.textContent = 'Digite seu e-mail acima primeiro.'; }
+  try { await S.reset(email); m.className = 'msg ok'; m.textContent = 'Enviamos um link de redefinição para ' + email + '.'; }
+  catch (err) { m.className = 'msg'; m.textContent = ERR[err.code] || err.message; }
+};
+$('#outBtn').onclick = () => S.signOut();
+
+/* ---------------- App ---------------- */
+async function enterApp(user){
+  $('#auth').classList.add('hide'); $('#app').classList.remove('hide');
+  const first = (user.name || '').split(' ')[0];
+  $('#owner').textContent = 'biblioteca de ' + (first || 'você');
+  try { books = await S.list(); } catch (e) { books = []; toast('Não consegui carregar seus livros.'); }
+  type('Bem-vinda à minha biblioteca'); render();
+}
+function type(txt){ const el = $('#typed'); el.textContent = ''; let i = 0; clearInterval(type.h); type.h = setInterval(() => { el.textContent = txt.slice(0, ++i); if (i >= txt.length) clearInterval(type.h); }, 55); }
+
+function filtered(){ const q = query.toLowerCase(); return books.filter(b => (cat === 'Todos' || b.category === cat) && (!q || [b.title, b.author, b.category].join(' ').toLowerCase().includes(q))); }
+function sortRead(a, b){ if ((a.status === 'lendo') !== (b.status === 'lendo')) return a.status === 'lendo' ? -1 : 1; return (b.endDate || b.createdAt || '').localeCompare(a.endDate || a.createdAt || ''); }
+
+function spineHTML(b){
+  const h = hash(b.id + b.title), color = b.color || PALETTE[h % PALETTE.length], ink = textOn(color);
+  const pages = +b.pages || 250, w = Math.max(26, Math.min(62, Math.round(pages / 9))), ht = 168 + (h % 5) * 9 + Math.min(30, pages / 30);
+  const style = h % 3, font = style === 0 ? `600 ${w > 40 ? 15 : 13}px var(--sans);text-transform:uppercase;letter-spacing:.04em` : style === 1 ? `500 ${w > 40 ? 20 : 17}px var(--serif)` : `italic 500 ${w > 40 ? 19 : 16}px var(--serif)`;
+  const bands = h % 2 ? `<i class="band" style="top:12px"></i><i class="band" style="bottom:12px"></i>` : '';
+  return `<button class="spine" data-id="${b.id}" style="width:${w}px;height:${ht}px;background:linear-gradient(90deg,${color},${color} 70%,color-mix(in srgb,${color},#000 18%));color:${ink}" title="${esc(b.title)} — ${esc(b.author)}" aria-label="${esc(b.title)}, de ${esc(b.author)}">${bands}${b.status === 'lendo' ? '<i class="rib"></i>' : ''}<span class="t" style="font:${font}"><span>${esc(b.title)}</span></span>${w >= 34 ? `<span class="a">${esc((b.author || '').split(' ').slice(-1)[0])}</span>` : ''}</button>`;
+}
+function ghosts(){ return Array.from({length: 9}, (_, i) => `<span class="spine ghost" style="width:${28 + i % 3 * 8}px;height:${170 + i * 7 % 40}px"></span>`).join(''); }
+
+function render(){
+  const f = filtered(), read = f.filter(b => b.status !== 'quero').sort(sortRead), to = f.filter(b => b.status === 'quero').sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+  const year = new Date().getFullYear(), readYear = books.filter(b => b.status === 'lido' && (b.endDate || '').startsWith(year)).length;
+  $('#count').textContent = `${books.length} ${books.length === 1 ? 'volume' : 'volumes'} · ${readYear} ${readYear === 1 ? 'lido' : 'lidos'} em ${year}`;
+  const cats = ['Todos', ...[...new Set(books.map(b => b.category).filter(Boolean))].sort()];
+  if (!cats.includes(cat)) cat = 'Todos';
+  $('#chips').innerHTML = cats.map(c => `<button class="pill ${c === cat ? 'on' : ''}" data-cat="${esc(c)}">${esc(c)}</button>`).join('');
+  $('#cats').innerHTML = [...new Set([...DEFAULT_CATS, ...cats.slice(1)])].map(c => `<option value="${esc(c)}">`).join('');
+  $('#shelfRead').innerHTML = read.length ? read.map(spineHTML).join('') : books.length
+    ? `<p class="empty">Nenhum livro lido encontrado com esse filtro.</p>`
+    : ghosts() + `<div class="empty"><p>Sua estante está vazia.<br>Que tal colocar o primeiro livro?</p><button class="btn" data-act="add">+ Adicionar livro</button> <button class="btn ghost" data-act="seed">Ver com exemplos</button></div>`;
+  $('#shelfTo').innerHTML = to.length ? to.map(spineHTML).join('') : `<p class="empty">${books.some(b => b.status === 'quero') ? 'Nada encontrado aqui.' : 'Livros marcados como “Quero ler” aparecem nesta estante.'}</p>`;
+  $('#countTo').textContent = `${books.filter(b => b.status === 'quero').length} livros`;
+  list = [...read, ...to];
+  updateArrows();
+}
+$('#chips').onclick = e => { const b = e.target.closest('[data-cat]'); if (b) { cat = b.dataset.cat; render(); } };
+$('#q').oninput = e => { query = e.target.value; render(); };
+document.addEventListener('click', e => {
+  const sp = e.target.closest('.spine[data-id]'); if (sp) return openBook(sp.dataset.id, sp);
+  const a = e.target.closest('[data-act]'); if (!a) return;
+  if (a.dataset.act === 'add') openForm(); if (a.dataset.act === 'seed') seed();
+});
+$('#addBtn').onclick = $('#addBtn2').onclick = () => openForm();
+document.querySelectorAll('.arrow').forEach(b => b.onclick = () => { const s = b.parentElement.querySelector('.shelf'); s.scrollBy({left: b.dataset.dir * s.clientWidth * 0.7}); });
+function updateArrows(){ document.querySelectorAll('.shelf-wrap').forEach(w => { const s = w.querySelector('.shelf'), over = s.scrollWidth > s.clientWidth + 4; w.querySelectorAll('.arrow').forEach(a => a.classList.toggle('hide', !over)); }); }
+const roShelf = new ResizeObserver(updateArrows); roShelf.observe(document.body);
+document.querySelectorAll('.shelf').forEach(s => s.addEventListener('wheel', e => { if (Math.abs(e.deltaY) > Math.abs(e.deltaX) && s.scrollWidth > s.clientWidth) { const max = s.scrollWidth - s.clientWidth; if ((e.deltaY > 0 && s.scrollLeft < max - 1) || (e.deltaY < 0 && s.scrollLeft > 0)) { e.preventDefault(); s.scrollLeft += e.deltaY; } } }, {passive: false}));
+
+/* ---------------- Detalhe do livro ---------------- */
+function coverHTML(b){
+  const h = hash(b.id + b.title), color = b.color || PALETTE[h % PALETTE.length], ink = textOn(color);
+  if (b.cover) return `<div class="cover" style="background:${color}"><img src="${esc(b.cover)}" alt="Capa de ${esc(b.title)}" onerror="this.remove()"></div>`;
+  return `<div class="cover" style="background:linear-gradient(160deg,${color},color-mix(in srgb,${color},#000 22%));color:${ink}"><span class="ca">${esc(b.author)}</span><div><div class="orn"></div><div class="ct" style="margin:16px 0">${esc(b.title)}</div><div class="orn"></div></div><span class="ca">${esc(b.category || '')}</span></div>`;
+}
+function openBook(id, spine){
+  const b = books.find(x => x.id === id); if (!b) return;
+  const ov = $('#ov'), wasOpen = !ov.classList.contains('hide');
+  current = b; renderInfo();
+  $('#slot').innerHTML = coverHTML(b);
+  if (!wasOpen) { ov.classList.remove('hide'); ov.scrollTop = 0; requestAnimationFrame(() => ov.classList.add('open')); document.body.style.overflow = 'hidden'; }
+  else ov.scrollTo({top: 0});
+  if (spine && !matchMedia('(prefers-reduced-motion: reduce)').matches) fly(spine);
+  else $('#slot').firstElementChild.animate([{opacity: 0, transform: 'rotateY(40deg) translateX(30px)'}, {opacity: 1, transform: 'none'}], {duration: 420, easing: 'cubic-bezier(.2,.8,.2,1)'});
+}
+function fly(spine){
+  spine.classList.add('pull');
+  const from = spine.getBoundingClientRect(), slot = $('#slot'), cover = slot.firstElementChild;
+  cover.style.opacity = '0';
+  setTimeout(() => {
+    const to = slot.getBoundingClientRect(), f = document.createElement('div');
+    f.className = 'flyer'; f.innerHTML = cover.outerHTML; f.firstElementChild.style.opacity = '1';
+    Object.assign(f.style, {left: to.left + 'px', top: to.top + 'px', width: to.width + 'px', height: to.height + 'px'});
+    document.body.append(f);
+    const sx = from.width / to.width, sy = from.height / to.height, dx = from.left - to.left, dy = from.top - to.top;
+    f.animate([
+      {transformOrigin: '0 0', transform: `translate(${dx}px,${dy}px) scale(${sx},${sy}) perspective(900px) rotateY(-75deg)`, opacity: .9},
+      {transformOrigin: '0 0', transform: `translate(${dx * .4}px,${dy * .4 - 40}px) scale(${(sx + 1) / 2},${(sy + 1) / 2}) perspective(900px) rotateY(-30deg)`, opacity: 1, offset: .5},
+      {transformOrigin: '0 0', transform: 'none', opacity: 1}
+    ], {duration: 650, easing: 'cubic-bezier(.3,.7,.2,1)'}).onfinish = () => { cover.style.opacity = '1'; f.remove(); spine.classList.remove('pull'); };
+  }, 180);
+}
+function renderInfo(){
+  const b = current, fs = finalScore(b);
+  if (!b.ratings || !b.ratings.length) b.ratings = CRITERIA.map(label => ({label, value: null}));
+  $('#info').innerHTML = `
+    <span class="status mono">${STATUS[b.status] || ''}${b.status === 'lido' && b.endDate ? ' · ' + fmtDate(b.endDate) : ''}</span>
+    <h2 id="dTitle">${esc(b.title)}</h2>
+    <p class="author">${esc(b.author)}</p>
+    <div class="facts">
+      <div><span>Publicado em</span><b>${esc(fmtDate(b.published) || '—')}</b></div>
+      <div><span>Páginas</span><b>${b.pages ? esc(b.pages) : '—'}</b></div>
+      <div><span>Categoria</span><b style="white-space:normal">${esc(b.category || '—')}</b></div>
+      <div><span>Comecei em</span><b>${fmtDate(b.startDate)}</b></div>
+      <div><span>Terminei em</span><b>${fmtDate(b.endDate)}</b></div>
+    </div>
+    <div class="sec"><h3>Sinopse</h3><p class="syn">${b.synopsis ? esc(b.synopsis) : '<span style="color:var(--mute)">Sem sinopse ainda. Use “Editar” para adicionar.</span>'}</p></div>
+    <div class="sec"><h3>Minha avaliação</h3>
+      <div class="score"><div class="num" id="fsNum">${fmtNum(fs)}</div><div><span class="stars" aria-hidden="true"><i id="fsStars" style="width:${(fs || 0) / 5 * 100}%"></i></span><div class="of">Nota final · média dos critérios avaliados (0 a 5)</div></div></div>
+      <div id="rates">${b.ratings.map(rateRow).join('')}</div>
+      <button class="addcrit" id="addCrit">+ Adicionar critério</button>
+    </div>
+    <div class="sec"><h3>Meus comentários</h3><textarea class="field" id="cm" placeholder="O que ficou com você depois dessa leitura?">${esc(b.comments || '')}</textarea><div class="saved" id="saved"></div></div>
+    <div class="actions"><button class="btn ghost" id="editB">Editar dados</button><button class="btn ghost" id="delB">Excluir livro</button></div>`;
+  const i = list.findIndex(x => x.id === b.id);
+  $('#prevB').disabled = i <= 0; $('#nextB').disabled = i < 0 || i >= list.length - 1;
+  $('#prevB').style.opacity = i <= 0 ? .35 : 1; $('#nextB').style.opacity = i >= list.length - 1 ? .35 : 1;
+  $('#lookB').href = 'https://www.google.com/search?q=' + encodeURIComponent(`${b.title} ${b.author} livro`);
+  bindInfo();
+}
+function rateRow(r, i){
+  const v = r.value, custom = i >= CRITERIA.length || !CRITERIA.includes(r.label);
+  return `<div class="rate" data-i="${i}"><div class="nm">${custom ? `<input value="${esc(r.label)}" aria-label="Nome do critério" placeholder="Nome do critério">` : esc(r.label)}</div>
+    <input type="range" min="0" max="5" step="0.5" value="${v ?? 0}" class="${v == null ? 'unset' : ''}" style="--p:${(v ?? 0) * 20}%" aria-label="Nota para ${esc(r.label)}">
+    <output>${v == null ? '–' : fmtNum(v)}</output><button class="x" title="${custom ? 'Remover critério' : 'Limpar nota'}" aria-label="${custom ? 'Remover critério' : 'Limpar nota'}">×</button></div>`;
+}
+function bindInfo(){
+  const b = current;
+  $('#rates').oninput = e => {
+    const row = e.target.closest('.rate'); if (!row) return; const i = +row.dataset.i;
+    if (e.target.type === 'range') { const v = +e.target.value; b.ratings[i].value = v; e.target.classList.remove('unset'); e.target.style.setProperty('--p', v * 20 + '%'); row.querySelector('output').textContent = fmtNum(v); updateScore(); }
+    else b.ratings[i].label = e.target.value;
+    autosave();
+  };
+  $('#rates').onclick = e => {
+    const x = e.target.closest('.x'); if (!x) return; const i = +x.closest('.rate').dataset.i, r = b.ratings[i];
+    if (CRITERIA.includes(r.label) && i < CRITERIA.length) r.value = null; else b.ratings.splice(i, 1);
+    $('#rates').innerHTML = b.ratings.map(rateRow).join(''); updateScore(); autosave();
+  };
+  $('#addCrit').onclick = () => { b.ratings.push({label: '', value: null}); $('#rates').innerHTML = b.ratings.map(rateRow).join(''); $('#rates .rate:last-child input').focus(); };
+  $('#cm').oninput = e => { b.comments = e.target.value; autosave(); };
+  $('#editB').onclick = () => openForm(b);
+  $('#delB').onclick = e => {
+    const btn = e.currentTarget;
+    if (btn.dataset.sure) { deleteBook(b.id); return; }
+    btn.dataset.sure = 1; btn.textContent = 'Toque de novo para excluir'; btn.className = 'btn danger';
+    setTimeout(() => { if (btn.isConnected) { delete btn.dataset.sure; btn.textContent = 'Excluir livro'; btn.className = 'btn ghost'; } }, 4000);
+  };
+}
+function updateScore(){ const fs = finalScore(current); $('#fsNum').textContent = fmtNum(fs); $('#fsStars').style.width = (fs || 0) / 5 * 100 + '%'; }
+function autosave(){
+  $('#saved').textContent = 'Salvando…'; clearTimeout(autosave.h);
+  const b = current;
+  autosave.h = setTimeout(async () => { b.updatedAt = new Date().toISOString(); try { await S.save(b); if ($('#saved')) $('#saved').textContent = 'Salvo ✓'; } catch { if ($('#saved')) $('#saved').textContent = 'Não consegui salvar. Tente de novo.'; } }, 600);
+}
+async function deleteBook(id){ try { await S.remove(id); books = books.filter(b => b.id !== id); closeBook(); render(); toast('Livro removido da estante'); } catch { toast('Não consegui excluir.'); } }
+function closeBook(){ const ov = $('#ov'); ov.classList.remove('open'); document.body.style.overflow = ''; setTimeout(() => ov.classList.add('hide'), 300); current = null; render(); }
+function step(d){ const i = list.findIndex(x => x.id === current.id), n = list[i + d]; if (n) openBook(n.id); }
+$('#closeB').onclick = closeBook; $('#prevB').onclick = () => step(-1); $('#nextB').onclick = () => step(1);
+document.addEventListener('keydown', e => {
+  if (!$('#fm').classList.contains('hide')) { if (e.key === 'Escape') closeForm(); return; }
+  if (!current || ['INPUT','TEXTAREA'].includes(document.activeElement.tagName)) return;
+  if (e.key === 'Escape') closeBook(); if (e.key === 'ArrowLeft') step(-1); if (e.key === 'ArrowRight') step(1);
+});
+
+/* ---------------- Formulário ---------------- */
+function openForm(b){
+  form = b ? {...b} : {id: uid(), status: 'lido', ratings: CRITERIA.map(label => ({label, value: null})), comments: '', createdAt: new Date().toISOString()};
+  $('#fTitle').textContent = b ? 'Editar livro' : 'Novo livro';
+  $('#lookupBox').classList.toggle('hide', !!b);
+  const set = (id, v) => $(id).value = v ?? '';
+  set('#fT', form.title); set('#fA', form.author); set('#fC', form.category); set('#fP', form.published); set('#fN', form.pages);
+  set('#fS', form.status); set('#fI', form.startDate); set('#fF', form.endDate); set('#fY', form.synopsis);
+  set('#fUrl', form.cover && !form.cover.startsWith('data:') ? form.cover : ''); set('#look', ''); $('#results').innerHTML = ''; $('#fMsg').textContent = '';
+  form.color = form.color || PALETTE[hash(form.id) % PALETTE.length];
+  drawCover(); drawSwatches();
+  $('#fm').classList.remove('hide'); setTimeout(() => (b ? $('#fT') : $('#look')).focus(), 50);
+}
+function closeForm(){ $('#fm').classList.add('hide'); }
+function drawCover(){ $('#cPrev').innerHTML = form.cover ? `<img src="${esc(form.cover)}" alt="" onerror="this.parentElement.textContent='link inválido'">` : 'sem capa'; }
+function drawSwatches(){ $('#sw').innerHTML = PALETTE.map(c => `<button type="button" data-c="${c}" class="${c === form.color ? 'on' : ''}" style="background:${c}" aria-label="Cor ${c}"></button>`).join(''); }
+$('#sw').onclick = e => { const c = e.target.dataset.c; if (c) { form.color = c; drawSwatches(); } };
+$('#fUrl').oninput = e => { form.cover = e.target.value.trim(); drawCover(); };
+$('#cClear').onclick = () => { form.cover = ''; $('#fUrl').value = ''; drawCover(); };
+$('#fFile').onchange = async e => {
+  const file = e.target.files[0]; if (!file) return;
+  const img = new Image(); img.src = URL.createObjectURL(file); await img.decode().catch(() => {});
+  const W = 420, sc = Math.min(1, W / img.width), c = document.createElement('canvas');
+  c.width = Math.round(img.width * sc); c.height = Math.round(img.height * sc);
+  const x = c.getContext('2d'); x.drawImage(img, 0, 0, c.width, c.height);
+  form.cover = c.toDataURL('image/jpeg', 0.82); $('#fUrl').value = '';
+  form.color = dominant(x, c.width, c.height) || form.color; drawCover(); drawSwatches(); e.target.value = '';
+};
+function dominant(x, w, h){ try { const d = x.getImageData(0, 0, Math.max(1, Math.round(w * .12)), h).data; let r = 0, g = 0, b = 0, n = 0; for (let i = 0; i < d.length; i += 16) { r += d[i]; g += d[i+1]; b += d[i+2]; n++; } const hex = v => Math.round(v / n).toString(16).padStart(2, '0'); return '#' + hex(r) + hex(g) + hex(b); } catch { return null; } }
+$('#fCancel').onclick = closeForm;
+$('#fm').onclick = e => { if (e.target.id === 'fm') closeForm(); };
+$('#bookForm').onsubmit = async e => {
+  e.preventDefault();
+  const v = id => $(id).value.trim();
+  if (!v('#fT') || !v('#fA')) return $('#fMsg').textContent = 'Preencha pelo menos título e autor(a).';
+  if (v('#fI') && v('#fF') && v('#fF') < v('#fI')) return $('#fMsg').textContent = 'A data de término está antes da data de início.';
+  Object.assign(form, {title: v('#fT'), author: v('#fA'), category: v('#fC'), published: v('#fP'), pages: v('#fN') ? +v('#fN') : null, status: v('#fS'), startDate: v('#fI'), endDate: v('#fF'), synopsis: v('#fY'), updatedAt: new Date().toISOString()});
+  $('#fSave').disabled = true;
+  try {
+    await S.save(form);
+    const i = books.findIndex(b => b.id === form.id); i < 0 ? books.push(form) : books[i] = form;
+    closeForm(); render(); toast(i < 0 ? 'Livro colocado na estante' : 'Alterações salvas');
+    if (current && current.id === form.id) { current = form; renderInfo(); $('#slot').innerHTML = coverHTML(form); }
+  } catch (err) { $('#fMsg').textContent = 'Não consegui salvar: ' + (err.message || err); }
+  $('#fSave').disabled = false;
+};
+
+/* Busca no Google Livros (funciona no site publicado; bloqueada na prévia) */
+async function lookup(){
+  const q = $('#look').value.trim(), box = $('#results'); if (!q) return;
+  box.innerHTML = '<small style="color:var(--mute)">Procurando…</small>';
+  try {
+    const r = await fetch('https://www.googleapis.com/books/v1/volumes?maxResults=6&printType=books&q=' + encodeURIComponent(q));
+    const j = await r.json(); const items = j.items || [];
+    if (!items.length) return box.innerHTML = '<small style="color:var(--mute)">Nada encontrado. Preencha à mão.</small>';
+    lookup.items = items;
+    box.innerHTML = items.map((it, i) => { const v = it.volumeInfo || {}, th = (v.imageLinks?.thumbnail || '').replace('http:', 'https:'); return `<button type="button" data-i="${i}">${th ? `<img src="${esc(th)}" alt="">` : '<img alt="">'}<span><b>${esc(v.title)}</b><small>${esc((v.authors || []).join(', '))}${v.publishedDate ? ' · ' + esc(v.publishedDate.slice(0, 4)) : ''}${v.pageCount ? ' · ' + v.pageCount + ' págs.' : ''}</small></span></button>`; }).join('');
+  } catch { box.innerHTML = '<small style="color:var(--mute)">A busca automática não está disponível nesta prévia — preencha os campos à mão. No site publicado ela funciona.</small>'; }
+}
+$('#lookGo').onclick = lookup;
+$('#look').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); lookup(); } };
+$('#results').onclick = e => {
+  const b = e.target.closest('[data-i]'); if (!b) return; const v = lookup.items[+b.dataset.i].volumeInfo || {};
+  const tmp = document.createElement('div'); tmp.innerHTML = v.description || '';
+  $('#fT').value = v.title + (v.subtitle ? ': ' + v.subtitle : ''); $('#fA').value = (v.authors || []).join(', ');
+  $('#fP').value = v.publishedDate || ''; $('#fN').value = v.pageCount || ''; $('#fY').value = tmp.textContent;
+  if (v.categories?.length && !$('#fC').value) $('#fC').value = v.categories[0];
+  const th = (v.imageLinks?.thumbnail || '').replace('http:', 'https:').replace('&edge=curl', '');
+  if (th) { form.cover = th; $('#fUrl').value = th; drawCover(); }
+  $('#results').innerHTML = '<small style="color:var(--mute)">Preenchido. Confira e ajuste o que quiser.</small>';
+};
+
+/* Exemplos para ver a estante funcionando */
+async function seed(){
+  const now = new Date().getFullYear(), R = vals => CRITERIA.map((label, i) => ({label, value: vals[i]}));
+  const ex = [
+    {title:'Dom Casmurro', author:'Machado de Assis', published:'1899', pages:256, category:'Clássicos', status:'lido', startDate:`${now}-02-03`, endDate:`${now}-02-20`, color:'#8c2f2f', synopsis:'Bento Santiago, já velho, reconta sua vida desde a juventude ao lado de Capitu e tenta provar que foi traído. Um narrador que convence e desconfia ao mesmo tempo.', ratings:R([5,4.5,4,4,4.5,5]), comments:'Fiquei dividida até a última página. Capitu traiu ou não?'},
+    {title:'O Pequeno Príncipe', author:'Antoine de Saint-Exupéry', published:'1943', pages:96, category:'Ficção literária', status:'lido', startDate:`${now}-04-10`, endDate:`${now}-04-11`, color:'#24577a', synopsis:'Um aviador perdido no deserto conhece um menino vindo de um pequeno planeta, que conta suas viagens e o que aprendeu sobre amizade, cuidado e o que é essencial.', ratings:R([4,4,5,5,4,4.5]), comments:''},
+    {title:'1984', author:'George Orwell', published:'1949', pages:416, category:'Ficção científica', status:'lendo', startDate:`${now}-11-02`, color:'#1e1e1e', synopsis:'Winston Smith trabalha reescrevendo a história para um regime que vigia tudo e todos, até começar a duvidar e a desejar algo proibido: pensar por conta própria.', ratings:R([null,null,null,null,null,null]), comments:''},
+    {title:'Sapiens', author:'Yuval Noah Harari', published:'2011', pages:464, category:'Não ficção', status:'lido', startDate:`${now}-06-01`, endDate:`${now}-07-15`, color:'#c9b37e', synopsis:'Uma visão ampla da história da humanidade, das primeiras espécies humanas às revoluções cognitiva, agrícola e científica.', ratings:R([4,3.5,4.5,3,4,4]), comments:'Ótimo para discutir; alguns capítulos se alongam.'},
+    {title:'A Hora da Estrela', author:'Clarice Lispector', published:'1977', pages:88, category:'Ficção literária', status:'quero', color:'#e8e4d8', synopsis:'Um narrador conta a história de Macabéa, nordestina pobre no Rio de Janeiro, e expõe a própria dificuldade de escrevê-la.'},
+    {title:'Torto Arado', author:'Itamar Vieira Junior', published:'2019', pages:264, category:'Romance', status:'quero', color:'#b5651d', synopsis:'No sertão da Bahia, duas irmãs têm a vida marcada por um acidente na infância e pela luta de suas famílias pela terra onde trabalham.'},
+    {title:'Pai Rico, Pai Pobre', author:'Robert Kiyosaki', published:'1997', pages:336, category:'Negócios', status:'quero', color:'#6b2fa0', synopsis:'O autor contrapõe as lições sobre dinheiro que recebeu de duas figuras paternas com visões opostas.'}
+  ].map((b, i) => ({id: uid() + i, createdAt: new Date(Date.now() - i * 1000).toISOString(), ...b, ratings: b.ratings || CRITERIA.map(label => ({label, value: null}))}));
+  for (const b of ex) { await S.save(b); books.push(b); }
+  render(); toast('Exemplos adicionados — você pode excluí-los depois');
+}
+
+/* ---------------- Início ---------------- */
+(async () => {
+  try { S = FIREBASE_CONFIG ? await makeFirebaseStore(FIREBASE_CONFIG) : LocalStore; }
+  catch (e) { console.error(e); S = LocalStore; toast('Firebase indisponível — usando modo demonstração'); }
+  S.init(u => u ? enterApp(u) : showAuth());
+})();
+}
+</script>
+</body>
+</html>
