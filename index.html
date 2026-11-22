@@ -210,6 +210,11 @@ input[type=range].unset::-webkit-slider-thumb{border-color:var(--line)}
 .sug .acts{display:flex;gap:6px;flex-wrap:wrap}
 .from{border-left:2px solid var(--accent);padding:4px 0 4px 14px;margin:0 0 20px;color:var(--mute);font-size:15px}
 .from q{display:block;font:italic 400 18px/1.4 var(--serif);color:var(--ink);margin-top:2px}
+.sec h4{font:600 14px var(--sans);margin:18px 0 6px}
+.sec h4:first-of-type{margin-top:4px}
+.ainote{font-size:13px;color:var(--mute);margin:12px 0 0}
+.ctx-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.ctx-box textarea{min-height:90px;margin-bottom:10px}
 .ro-cm{font:400 19px/1.5 var(--serif);white-space:pre-line;margin:0}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -304,7 +309,7 @@ input[type=range].unset::-webkit-slider-thumb{border-color:var(--line)}
     <p class="hint">Busque pelo título para preencher automaticamente, ou preencha à mão.</p>
     <div class="grid">
       <div class="full" id="lookupBox">
-        <label class="lb" for="look">Buscar no Google Livros</label>
+        <label class="lb" for="look">Buscar livro (preenche tudo automaticamente)</label>
         <div class="lookup"><input class="field" id="look" placeholder="Ex.: Dom Casmurro"><button type="button" class="btn ghost" id="lookGo">Buscar</button></div>
         <div class="results" id="results"></div>
       </div>
@@ -319,6 +324,13 @@ input[type=range].unset::-webkit-slider-thumb{border-color:var(--line)}
       <div><label class="lb" for="fI">Comecei a ler em</label><input class="field" id="fI" type="date"></div>
       <div><label class="lb" for="fF">Terminei de ler em</label><input class="field" id="fF" type="date"></div>
       <div class="full"><label class="lb" for="fY">Sinopse</label><textarea class="field" id="fY"></textarea></div>
+      <div class="full ctx-box">
+        <div class="ctx-head"><span class="lb" style="margin:0;font-weight:600;color:var(--ink)">Contexto da obra</span><button type="button" class="btn ghost" id="ctxGo">✦ Gerar com IA</button></div>
+        <p class="ainote" id="ctxMsg" style="margin:0 0 10px">Preenchido automaticamente ao escolher um livro na busca. Você pode editar.</p>
+        <label class="lb" for="fH">Contexto histórico</label><textarea class="field" id="fH"></textarea>
+        <label class="lb" for="fV">Por que é inovadora</label><textarea class="field" id="fV"></textarea>
+        <label class="lb" for="fD">Por que se destaca</label><textarea class="field" id="fD"></textarea>
+      </div>
       <div class="full">
         <span class="lb">Capa</span>
         <div class="cover-pick">
@@ -377,7 +389,7 @@ input[type=range].unset::-webkit-slider-thumb{border-color:var(--line)}
     <p class="hint">A sugestão chega na aba “Sugestões” da outra pessoa, que pode colocar o livro na estante “Quero ler”.</p>
     <div class="grid">
       <div class="full">
-        <label class="lb" for="sLook">Buscar no Google Livros</label>
+        <label class="lb" for="sLook">Buscar livro</label>
         <div class="lookup"><input class="field" id="sLook" placeholder="Ex.: Torto Arado"><button type="button" class="btn ghost" id="sLookGo">Buscar</button></div>
         <div class="results" id="sResults"></div>
       </div>
@@ -451,6 +463,7 @@ const LocalStore = {
   async signIn(email, pass){ const u = (LS.get('lib_users') || {})[email]; if (!u || u.hash !== await sha(u.salt + pass)) throw {code:'auth/invalid-credential'}; LS.set('lib_session', email); this.user = {uid: email, email, name: u.name}; this.cb(this.user); },
   async signOut(){ LS.del('lib_session'); this.user = null; this.profile = null; this.cb(null); },
   async reset(){ throw {code:'local/reset'}; },
+  async token(){ return null; },
   key(u){ return 'lib_books_' + (u || this.user.uid); },
   async list(u){ return LS.get(this.key(u)) || []; },
   async save(b){ const all = await this.list(); const i = all.findIndex(x => x.id === b.id); i < 0 ? all.push(b) : all[i] = b; LS.set(this.key(), all); },
@@ -490,6 +503,7 @@ async function makeFirebaseStore(cfg){
     signIn: (e, p) => U.signInWithEmailAndPassword(auth, e, p),
     signOut: () => U.signOut(auth),
     reset: e => U.sendPasswordResetEmail(auth, e),
+    token: () => auth.currentUser ? auth.currentUser.getIdToken() : null,
     col(u){ return F.collection(db, 'users', u || this.user.uid, 'books'); },
     async list(u){ const s = await F.getDocs(this.col(u)); return s.docs.map(x => ({id: x.id, ...x.data()})); },
     save(b){ return F.setDoc(F.doc(this.col(), b.id), b); },
@@ -720,6 +734,7 @@ function renderInfo(){
         return `<div><span>${done ? 'Tempo de leitura' : 'Lendo há'}</span><b>${fmtDays(n)}</b></div>` + (done && b.pages ? `<div><span>Ritmo</span><b>~${Math.max(1, Math.round(b.pages / n))} págs./dia</b></div>` : ''); })()}
     </div>
     <div class="sec"><h3>Sinopse</h3><p class="syn">${b.synopsis ? esc(b.synopsis) : `<span style="color:var(--mute)">${ro ? 'Sem sinopse.' : 'Sem sinopse ainda. Use “Editar” para adicionar.'}</span>`}</p></div>
+    ${ctxHTML(b, ro)}
     <div class="sec"><h3>${ro ? 'Avaliação de ' + esc(first(viewing.profile)) : 'Minha avaliação'}</h3>
       <div class="score"><div class="num" id="fsNum">${fmtNum(fs)}</div><div><span class="stars" aria-hidden="true"><i id="fsStars" style="width:${(fs || 0) / 5 * 100}%"></i></span><div class="of">Nota final · média dos critérios avaliados (0 a 5)</div></div></div>
       <div id="rates">${b.ratings.map((r, i) => rateRow(r, i, ro)).join('')}</div>
@@ -733,6 +748,11 @@ function renderInfo(){
   $('#prevB').style.opacity = i <= 0 ? .35 : 1; $('#nextB').style.opacity = i >= list.length - 1 ? .35 : 1;
   $('#lookB').href = 'https://www.google.com/search?q=' + encodeURIComponent(`${b.title} ${b.author} livro`);
   if (!ro) bindInfo();
+}
+function ctxHTML(b, ro){
+  const c = b.context || {}, parts = [['Contexto histórico', c.historico], ['Por que é inovadora', c.inovacao], ['Por que se destaca', c.destaque]].filter(x => x[1]);
+  if (parts.length) return `<div class="sec"><h3>Contexto da obra</h3>${parts.map(([h, t]) => `<h4>${h}</h4><p class="syn">${esc(t)}</p>`).join('')}<p class="ainote">Texto gerado com IA a partir do título e autor. Pode conter imprecisões.</p></div>`;
+  return ro ? '' : `<div class="sec"><h3>Contexto da obra</h3><button class="btn ghost" id="ctxDetail">✦ Gerar contexto com IA</button><p class="ainote" id="ctxDMsg">Explica o contexto histórico, por que a obra foi inovadora e por que se destaca.</p></div>`;
 }
 function rateRow(r, i, ro){
   const v = r.value, custom = i >= CRITERIA.length || !CRITERIA.includes(r.label);
@@ -757,6 +777,18 @@ function bindInfo(){
   $('#addCrit').onclick = () => { b.ratings.push({label: '', value: null}); $('#rates').innerHTML = b.ratings.map(rateRow).join(''); $('#rates .rate:last-child input').focus(); };
   $('#cm').oninput = e => { b.comments = e.target.value; autosave(); };
   $('#editB').onclick = () => openForm(b);
+  if ($('#ctxDetail')) $('#ctxDetail').onclick = async e => {
+    const btn = e.currentTarget, m = $('#ctxDMsg'); btn.disabled = true; m.textContent = 'Gerando com IA… leva alguns segundos.';
+    try {
+      const j = await aiContext(b);
+      b.context = j.context;
+      if (!b.synopsis && j.synopsis) b.synopsis = j.synopsis;
+      if (!DEFAULT_CATS.includes(b.category) && j.category) b.category = j.category;
+      if (!b.published && j.published) b.published = j.published;
+      if (!b.pages && j.pages) b.pages = j.pages;
+      b.updatedAt = new Date().toISOString(); await S.save(b); renderInfo(); render(); toast('Contexto da obra adicionado');
+    } catch (err) { m.textContent = err.message; btn.disabled = false; }
+  };
   $('#delB').onclick = e => {
     const btn = e.currentTarget;
     if (btn.dataset.sure) { deleteBook(b.id); return; }
@@ -791,6 +823,8 @@ function openForm(b){
   const set = (id, v) => $(id).value = v ?? '';
   set('#fT', form.title); set('#fA', form.author); set('#fC', form.category); set('#fP', form.published); set('#fN', form.pages);
   set('#fS', form.status); set('#fI', form.startDate); set('#fF', form.endDate); set('#fY', form.synopsis);
+  set('#fH', form.context?.historico); set('#fV', form.context?.inovacao); set('#fD', form.context?.destaque);
+  $('#ctxMsg').textContent = 'Preenchido automaticamente ao escolher um livro na busca. Você pode editar.';
   set('#fUrl', form.cover && !form.cover.startsWith('data:') ? form.cover : ''); set('#look', ''); $('#results').innerHTML = ''; $('#fMsg').textContent = '';
   form.color = form.color || PALETTE[hash(form.id) % PALETTE.length];
   drawCover(); drawSwatches();
@@ -820,6 +854,8 @@ $('#bookForm').onsubmit = async e => {
   if (!v('#fT') || !v('#fA')) return $('#fMsg').textContent = 'Preencha pelo menos título e autor(a).';
   if (v('#fI') && v('#fF') && v('#fF') < v('#fI')) return $('#fMsg').textContent = 'A data de término está antes da data de início.';
   Object.assign(form, {title: v('#fT'), author: v('#fA'), category: v('#fC'), published: v('#fP'), pages: v('#fN') ? +v('#fN') : null, status: v('#fS'), startDate: v('#fI'), endDate: v('#fF'), synopsis: v('#fY'), updatedAt: new Date().toISOString()});
+  const ctx = {historico: v('#fH'), inovacao: v('#fV'), destaque: v('#fD')};
+  form.context = (ctx.historico || ctx.inovacao || ctx.destaque) ? ctx : null;
   $('#fSave').disabled = true;
   try {
     await S.save(form);
@@ -830,30 +866,59 @@ $('#bookForm').onsubmit = async e => {
   $('#fSave').disabled = false;
 };
 
-/* Busca no Google Livros (funciona no site publicado; bloqueada na prévia) */
+/* ---------------- Busca de livros e IA ---------------- */
+/* 1º: função da Vercel /api/buscar (Google Livros com chave + Open Library). 2º: Open Library direto do navegador. */
+async function searchBooks(q){
+  try { const r = await fetch('/api/buscar?q=' + encodeURIComponent(q)); if (r.ok && (r.headers.get('content-type') || '').includes('json')) { const j = await r.json(); if (j.items && j.items.length) return j.items; } } catch {}
+  const r = await fetch('https://openlibrary.org/search.json?limit=8&fields=title,author_name,first_publish_year,number_of_pages_median,cover_i&q=' + encodeURIComponent(q));
+  const j = await r.json();
+  return (j.docs || []).map(d => ({source: 'openlibrary', title: d.title || '', author: (d.author_name || []).join(', '), published: d.first_publish_year ? String(d.first_publish_year) : '', pages: d.number_of_pages_median || null, category: '', synopsis: '', language: '', cover: d.cover_i ? `https://covers.openlibrary.org/b/id/${d.cover_i}-M.jpg` : ''})).filter(b => b.title);
+}
+const resultsHTML = items => items.map((v, i) => `<button type="button" data-i="${i}">${v.cover ? `<img src="${esc(v.cover)}" alt="" onerror="this.removeAttribute('src')">` : '<img alt="">'}<span><b>${esc(v.title)}</b><small>${esc(v.author)}${v.published ? ' · ' + esc(String(v.published).slice(0, 4)) : ''}${v.pages ? ' · ' + v.pages + ' págs.' : ''}</small></span></button>`).join('');
+async function aiContext(book){
+  const tk = await S.token();
+  if (!tk) throw new Error('A IA funciona no site publicado, com login pelo Firebase.');
+  const r = await fetch('/api/contexto', {method: 'POST', headers: {'Content-Type': 'application/json', Authorization: 'Bearer ' + tk}, body: JSON.stringify({title: book.title, author: book.author, published: book.published})});
+  let j = {}; try { j = await r.json(); } catch {}
+  if (!r.ok) throw new Error(j.error || 'Não consegui gerar o contexto agora.');
+  return j;
+}
 async function lookup(){
   const q = $('#look').value.trim(), box = $('#results'); if (!q) return;
   box.innerHTML = '<small style="color:var(--mute)">Procurando…</small>';
-  try {
-    const r = await fetch('https://www.googleapis.com/books/v1/volumes?maxResults=6&printType=books&q=' + encodeURIComponent(q));
-    const j = await r.json(); const items = j.items || [];
-    if (!items.length) return box.innerHTML = '<small style="color:var(--mute)">Nada encontrado. Preencha à mão.</small>';
-    lookup.items = items;
-    box.innerHTML = items.map((it, i) => { const v = it.volumeInfo || {}, th = (v.imageLinks?.thumbnail || '').replace('http:', 'https:'); return `<button type="button" data-i="${i}">${th ? `<img src="${esc(th)}" alt="">` : '<img alt="">'}<span><b>${esc(v.title)}</b><small>${esc((v.authors || []).join(', '))}${v.publishedDate ? ' · ' + esc(v.publishedDate.slice(0, 4)) : ''}${v.pageCount ? ' · ' + v.pageCount + ' págs.' : ''}</small></span></button>`; }).join('');
-  } catch { box.innerHTML = '<small style="color:var(--mute)">A busca automática não está disponível nesta prévia — preencha os campos à mão. No site publicado ela funciona.</small>'; }
+  try { lookup.items = await searchBooks(q); box.innerHTML = lookup.items.length ? resultsHTML(lookup.items) : '<small style="color:var(--mute)">Nada encontrado. Tente outro termo ou preencha à mão.</small>'; }
+  catch { box.innerHTML = '<small style="color:var(--mute)">A busca não está disponível aqui. Preencha à mão.</small>'; }
 }
 $('#lookGo').onclick = lookup;
 $('#look').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); lookup(); } };
 $('#results').onclick = e => {
-  const b = e.target.closest('[data-i]'); if (!b) return; const v = lookup.items[+b.dataset.i].volumeInfo || {};
-  const tmp = document.createElement('div'); tmp.innerHTML = v.description || '';
-  $('#fT').value = v.title + (v.subtitle ? ': ' + v.subtitle : ''); $('#fA').value = (v.authors || []).join(', ');
-  $('#fP').value = v.publishedDate || ''; $('#fN').value = v.pageCount || ''; $('#fY').value = tmp.textContent;
-  if (v.categories?.length && !$('#fC').value) $('#fC').value = v.categories[0];
-  const th = (v.imageLinks?.thumbnail || '').replace('http:', 'https:').replace('&edge=curl', '');
-  if (th) { form.cover = th; $('#fUrl').value = th; drawCover(); }
-  $('#results').innerHTML = '<small style="color:var(--mute)">Preenchido. Confira e ajuste o que quiser.</small>';
+  const b = e.target.closest('[data-i]'); if (!b) return; const v = lookup.items[+b.dataset.i];
+  $('#fT').value = v.title; $('#fA').value = v.author; $('#fP').value = v.published || ''; $('#fN').value = v.pages || '';
+  $('#fY').value = v.synopsis || ''; if (DEFAULT_CATS.includes(v.category)) $('#fC').value = v.category;
+  if (v.cover) { form.cover = v.cover; $('#fUrl').value = v.cover; drawCover(); }
+  lookup.lang = v.language;
+  $('#results').innerHTML = '<small style="color:var(--mute)">Dados preenchidos. Gerando o contexto da obra…</small>';
+  fillWithAI(false);
 };
+/* Completa com IA: contexto sempre; sinopse, categoria, ano e páginas só se estiverem vazios */
+async function fillWithAI(manual){
+  const t = $('#fT').value.trim(), msg = $('#ctxMsg'), btn = $('#ctxGo');
+  if (!t) { msg.textContent = 'Preencha pelo menos o título antes.'; return; }
+  btn.disabled = true; msg.textContent = 'Gerando com IA… leva alguns segundos.';
+  try {
+    const j = await aiContext({title: t, author: $('#fA').value.trim(), published: $('#fP').value.trim()});
+    const fill = (id, val) => { if (val && (manual || !$(id).value.trim())) $(id).value = val; };
+    fill('#fH', j.context.historico); fill('#fV', j.context.inovacao); fill('#fD', j.context.destaque);
+    if (j.synopsis && (!$('#fY').value.trim() || (lookup.lang && !String(lookup.lang).startsWith('pt')))) $('#fY').value = j.synopsis;
+    if (j.category && !DEFAULT_CATS.includes($('#fC').value)) $('#fC').value = j.category;
+    if (j.published && !$('#fP').value.trim()) $('#fP').value = j.published;
+    if (j.pages && !$('#fN').value) $('#fN').value = j.pages;
+    msg.textContent = 'Gerado com IA. Confira e ajuste o que quiser antes de salvar.';
+    $('#results').innerHTML = '';
+  } catch (err) { msg.textContent = err.message; if ($('#results').textContent.includes('Gerando')) $('#results').innerHTML = '<small style="color:var(--mute)">Dados preenchidos. Confira antes de salvar.</small>'; }
+  btn.disabled = false; lookup.lang = '';
+}
+$('#ctxGo').onclick = () => fillWithAI(true);
 
 /* ---------------- Pessoas ---------------- */
 async function refreshRequests(){
@@ -967,19 +1032,15 @@ $('#sm').onclick = e => { if (e.target.id === 'sm') $('#sm').classList.add('hide
 async function sLookup(){
   const q = $('#sLook').value.trim(), box = $('#sResults'); if (!q) return;
   box.innerHTML = '<small style="color:var(--mute)">Procurando…</small>';
-  try {
-    const j = await (await fetch('https://www.googleapis.com/books/v1/volumes?maxResults=5&printType=books&q=' + encodeURIComponent(q))).json();
-    sLookup.items = j.items || [];
-    box.innerHTML = sLookup.items.length ? sLookup.items.map((it, i) => { const v = it.volumeInfo || {}, th = (v.imageLinks?.thumbnail || '').replace('http:', 'https:'); return `<button type="button" data-i="${i}">${th ? `<img src="${esc(th)}" alt="">` : '<img alt="">'}<span><b>${esc(v.title)}</b><small>${esc((v.authors || []).join(', '))}${v.publishedDate ? ' · ' + esc(v.publishedDate.slice(0, 4)) : ''}</small></span></button>`; }).join('') : '<small style="color:var(--mute)">Nada encontrado. Preencha à mão.</small>';
-  } catch { box.innerHTML = '<small style="color:var(--mute)">Busca indisponível aqui. Preencha título e autor à mão.</small>'; }
+  try { sLookup.items = await searchBooks(q); box.innerHTML = sLookup.items.length ? resultsHTML(sLookup.items.slice(0, 5)) : '<small style="color:var(--mute)">Nada encontrado. Preencha à mão.</small>'; }
+  catch { box.innerHTML = '<small style="color:var(--mute)">Busca indisponível aqui. Preencha título e autor à mão.</small>'; }
 }
 $('#sLookGo').onclick = sLookup;
 $('#sLook').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); sLookup(); } };
 $('#sResults').onclick = e => {
-  const b = e.target.closest('[data-i]'); if (!b) return; const v = sLookup.items[+b.dataset.i].volumeInfo || {};
-  const tmp = document.createElement('div'); tmp.innerHTML = v.description || '';
-  sugPick = {published: v.publishedDate || '', pages: v.pageCount || null, category: v.categories?.[0] || '', synopsis: tmp.textContent.slice(0, 3000), cover: (v.imageLinks?.thumbnail || '').replace('http:', 'https:').replace('&edge=curl', '')};
-  $('#sT').value = (v.title || '') + (v.subtitle ? ': ' + v.subtitle : ''); $('#sA').value = (v.authors || []).join(', ');
+  const b = e.target.closest('[data-i]'); if (!b) return; const v = sLookup.items[+b.dataset.i];
+  sugPick = {published: v.published || '', pages: v.pages || null, category: DEFAULT_CATS.includes(v.category) ? v.category : '', synopsis: v.synopsis || '', cover: v.cover || ''};
+  $('#sT').value = v.title; $('#sA').value = v.author;
   $('#sResults').innerHTML = '<small style="color:var(--mute)">Preenchido. Agora conte por que você indica.</small>'; $('#sN').focus();
 };
 $('#sugForm').onsubmit = async e => {

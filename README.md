@@ -104,7 +104,10 @@ other projects, it runs entirely on **free tiers**: no paid licenses, no server 
 <tr>
 <td width="50%" valign="top">
 
-### 🔎 Data
+### 🔎 Data & AI
+<img src="https://img.shields.io/badge/Google%20Gemini-3B82C4?style=for-the-badge&logo=googlegemini&logoColor=white"/>
+<img src="https://img.shields.io/badge/Vercel%20Functions-0B1F3A?style=for-the-badge&logo=vercel&logoColor=white"/>
+<img src="https://img.shields.io/badge/Open%20Library-1E4E8C?style=for-the-badge&logoColor=white"/>
 <img src="https://img.shields.io/badge/Google%20Books%20API-3B82C4?style=for-the-badge&logo=google&logoColor=white"/>
 <img src="https://img.shields.io/badge/Canvas%20(cover%20color)-1E4E8C?style=for-the-badge&logoColor=white"/>
 <img src="https://img.shields.io/badge/localStorage%20(demo)-0B1F3A?style=for-the-badge&logoColor=white"/>
@@ -129,7 +132,8 @@ other projects, it runs entirely on **free tiers**: no paid licenses, no server 
 |:---:|---|---|
 | 📚 | **Two shelves** | "Read / reading now" (with a ribbon on books in progress) and a **"Want to read"** shelf |
 | 🎬 | **Pull-out animation** | The spine lifts, flies to the center and rotates into the book's cover |
-| 🔎 | **Auto-fill** | Search the **Google Books API** to fill in title, author, year, pages, synopsis and cover |
+| 🔎 | **Auto-fill** | Search by title: a Vercel function queries **Google Books** (with its own key) and falls back to **Open Library**, filling title, author, year, pages, synopsis, category and cover |
+| 🏛️ | **Work context (AI)** | **Gemini** writes the historical context, why the book was innovative and why it stands out, plus a spoiler-free synopsis in Portuguese |
 | 🖼️ | **Cover upload** | The photo is resized in the browser and the **spine color is taken from the cover** |
 | ⭐ | **Rating by criteria** | 6 criteria from 0 to 5 (half points), plus **custom criteria** of your own |
 | ⏱️ | **Reading time** | Days between start and finish, pages per day, "reading for X days" on books in progress and your average per book |
@@ -155,11 +159,14 @@ flowchart LR
     APP <--> AUTH["Firebase Auth<br/>e-mail + password"]
     APP <--> FS[("Cloud Firestore<br/>users · books · followers<br/>following · suggestions")]
     APP <--> UN[("usernames<br/>unique @handles")]
-    APP -->|"search by title"| GB["Google Books API"]
-    GB -->|"title, author, pages,<br/>synopsis, cover"| APP
+    APP -->|"/api/buscar"| FN["Vercel Functions"]
+    FN --> GB["Google Books API"]
+    FN -.->|"fallback"| OL["Open Library"]
+    APP -->|"/api/contexto + ID token"| FN
+    FN --> GEM["Google Gemini<br/>structured JSON"]
 ```
 
-The whole app lives in **a single HTML file**, with no build step. A small storage layer switches between
+The front end lives in **a single HTML file**, with no build step; two small **Vercel Functions** (`api/`) keep the API keys on the server. A small storage layer switches between
 **Firebase** (when configured) and **localStorage** (demo mode), so the same code runs in both.
 
 <br/>
@@ -171,6 +178,7 @@ The whole app lives in **a single HTML file**, with no build step. A small stora
 | 🔐 **Authentication** | Sign up, sign in, sign out and password reset with Firebase Auth |
 | 🛡️ **Security Rules** | Books readable only by the owner and **accepted followers**; follow status can only be changed by the right person |
 | 👥 **Social data modeling** | Mirrored `followers` / `following` subcollections written atomically with batched writes |
+| 🤖 **Generative AI** | Gemini with a JSON schema, a prompt that asks it not to invent facts, and the key kept on the server |
 | 🌐 **Consuming APIs** | Fetching and cleaning Google Books data to fill in a form |
 | 🎬 **UI animation** | Web Animations API for the pull-out and cover-flip effect |
 | 🖼️ **Image processing** | Resizing covers with Canvas and extracting the dominant color |
@@ -270,7 +278,10 @@ como meus outros projetos, roda inteiro em **planos gratuitos**: sem licenças p
 <tr>
 <td width="50%" valign="top">
 
-### 🔎 Dados
+### 🔎 Dados e IA
+<img src="https://img.shields.io/badge/Google%20Gemini-3B82C4?style=for-the-badge&logo=googlegemini&logoColor=white"/>
+<img src="https://img.shields.io/badge/Vercel%20Functions-0B1F3A?style=for-the-badge&logo=vercel&logoColor=white"/>
+<img src="https://img.shields.io/badge/Open%20Library-1E4E8C?style=for-the-badge&logoColor=white"/>
 <img src="https://img.shields.io/badge/Google%20Books%20API-3B82C4?style=for-the-badge&logo=google&logoColor=white"/>
 <img src="https://img.shields.io/badge/Canvas%20(cor%20da%20capa)-1E4E8C?style=for-the-badge&logoColor=white"/>
 <img src="https://img.shields.io/badge/localStorage%20(demo)-0B1F3A?style=for-the-badge&logoColor=white"/>
@@ -295,7 +306,8 @@ como meus outros projetos, roda inteiro em **planos gratuitos**: sem licenças p
 |:---:|---|---|
 | 📚 | **Duas estantes** | "Lidos / lendo agora" (com fitinha marcadora nos livros em andamento) e a estante **"Quero ler"** |
 | 🎬 | **Animação de tirar da estante** | A lombada sobe, voa até o centro e gira até virar a capa do livro |
-| 🔎 | **Preenchimento automático** | Busca na **API do Google Livros** para preencher título, autor, ano, páginas, sinopse e capa |
+| 🔎 | **Preenchimento automático** | Busca pelo título: uma função na Vercel consulta o **Google Livros** (com chave própria) e, se falhar, o **Open Library**, preenchendo título, autor, ano, páginas, sinopse, categoria e capa |
+| 🏛️ | **Contexto da obra (IA)** | O **Gemini** escreve o contexto histórico, por que a obra foi inovadora e por que se destaca, além de uma sinopse sem spoilers em português |
 | 🖼️ | **Envio de capa** | A foto é redimensionada no próprio navegador e a **cor da lombada é tirada da capa** |
 | ⭐ | **Avaliação por critérios** | 6 critérios de 0 a 5 (de meio em meio ponto), além de **critérios personalizados** |
 | ⏱️ | **Tempo de leitura** | Dias entre o início e o fim, páginas por dia, "lendo há X dias" nos livros em andamento e a sua média por livro |
@@ -321,11 +333,14 @@ flowchart LR
     APP <--> AUTH["Firebase Auth<br/>e-mail + senha"]
     APP <--> FS[("Cloud Firestore<br/>users · books · followers<br/>following · suggestions")]
     APP <--> UN[("usernames<br/>@ únicos")]
-    APP -->|"busca por título"| GB["API Google Livros"]
-    GB -->|"título, autor, páginas,<br/>sinopse, capa"| APP
+    APP -->|"/api/buscar"| FN["Funções da Vercel"]
+    FN --> GB["API Google Livros"]
+    FN -.->|"plano B"| OL["Open Library"]
+    APP -->|"/api/contexto + token"| FN
+    FN --> GEM["Google Gemini<br/>JSON estruturado"]
 ```
 
-O app inteiro fica em **um único arquivo HTML**, sem etapa de build. Uma camada de armazenamento alterna entre o
+O front-end fica em **um único arquivo HTML**, sem etapa de build; duas pequenas **funções da Vercel** (`api/`) guardam as chaves de API no servidor. Uma camada de armazenamento alterna entre o
 **Firebase** (quando configurado) e o **localStorage** (modo demonstração), então o mesmo código funciona nos dois.
 
 <br/>
@@ -336,6 +351,7 @@ O app inteiro fica em **um único arquivo HTML**, sem etapa de build. Uma camada
 2. Cole o conteúdo de `firestore.rules` na aba **Regras** do Firestore e publique.
 3. No `index.html`, troque `const FIREBASE_CONFIG = null;` pelo objeto de configuração do seu app Web.
 4. Publique na **Vercel** (Framework: *Other*) e adicione o domínio em **Authentication → Configurações → Domínios autorizados**.
+5. Na Vercel, em **Settings → Environment Variables**, crie `GEMINI_API_KEY` (chave do Google AI Studio) e `GOOGLE_BOOKS_API_KEY` (chave do Google Cloud com a Books API ativada). Depois faça um novo deploy.
 
 Sem configuração, o app roda em **modo demonstração**, com os dados salvos só no navegador.
 
@@ -348,6 +364,7 @@ Sem configuração, o app roda em **modo demonstração**, com os dados salvos s
 | 🔐 **Autenticação** | Cadastro, login, logout e redefinição de senha com Firebase Auth |
 | 🛡️ **Security Rules** | Livros visíveis só para a dona e **seguidores aceitos**; o status do pedido só pode ser mudado pela pessoa certa |
 | 👥 **Modelagem de dados social** | Subcoleções espelhadas `followers` / `following` gravadas juntas com batched writes |
+| 🤖 **IA Generativa** | Gemini com schema JSON, prompt que pede para não inventar fatos e a chave guardada no servidor |
 | 🌐 **Consumo de APIs** | Buscar e tratar os dados do Google Livros para preencher um formulário |
 | 🎬 **Animação de interface** | Web Animations API para o efeito de tirar o livro da estante e virar a capa |
 | 🖼️ **Tratamento de imagem** | Redimensionar capas com Canvas e extrair a cor predominante |
