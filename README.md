@@ -354,12 +354,6 @@ Sem configuração, o app roda em **modo demonstração**, com os dados salvos s
 
 <br/>
 
-## 📜 Créditos
-
-Inspirado no conceito do [virtual-library.app](https://virtual-library.app). Dados de livros fornecidos pela
-[Google Books API](https://developers.google.com/books).
-
-<br/>
 
 ## 👩‍💻 Autora
 
