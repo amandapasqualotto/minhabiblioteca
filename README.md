@@ -140,7 +140,7 @@ other projects, it runs entirely on **free tiers**: no paid licenses, no server 
 | 🧮 | **Final score** | Average of the rated criteria only, so unrated ones don't pull the score down |
 | 🏷️ | **Search & filters** | By title, author or category, with category chips |
 | ⌨️ | **Navigation** | Previous / Next (also with arrow keys) and a "Look it up" shortcut |
-| 💾 | **Autosave** | Ratings and comments are saved as you type |
+| 📝 | **One form for everything** | Book data, ratings and comments are filled in together; clicking a book shows only the final card |
 | 👤 | **Unique @username** | Reserved in a `usernames` collection, so no two people share the same handle |
 | 🤝 | **Follow requests** | Ask to follow; the other person sees the request and chooses **Allow** or **Decline** |
 | 💌 | **Book suggestions** | People connected by a follow can recommend a book with a note; the receiver adds it to "Want to read" in one click, and the card shows who suggested it |
@@ -314,7 +314,7 @@ como meus outros projetos, roda inteiro em **planos gratuitos**: sem licenças p
 | 🧮 | **Nota final** | Média só dos critérios avaliados, para os que ficaram sem nota não puxarem a média para baixo |
 | 🏷️ | **Busca e filtros** | Por título, autor ou categoria, com botões de categoria |
 | ⌨️ | **Navegação** | Anterior / Próximo (também pelas setas do teclado) e atalho "Pesquisar" |
-| 💾 | **Salvamento automático** | Notas e comentários são salvos enquanto você digita |
+| 📝 | **Um formulário para tudo** | Dados do livro, notas e comentários são preenchidos juntos; ao clicar no livro, aparece só a ficha final |
 | 👤 | **@nome de usuário único** | Reservado numa coleção `usernames`, então duas pessoas nunca têm o mesmo @ |
 | 🤝 | **Pedidos para seguir** | Você pede para seguir; a outra pessoa vê o pedido e escolhe **Permitir** ou **Recusar** |
 | 💌 | **Sugestões de livros** | Quem se segue pode indicar um livro com um recado; quem recebe coloca na estante "Quero ler" com um clique, e a ficha mostra quem sugeriu |

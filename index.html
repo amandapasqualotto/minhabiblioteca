@@ -331,6 +331,13 @@ input[type=range].unset::-webkit-slider-thumb{border-color:var(--line)}
         <textarea class="field" id="fH" style="min-height:170px" aria-label="Contexto da obra" placeholder="Momento histórico em que foi escrita, o que trouxe de novo e por que se destaca."></textarea>
       </div>
       <div class="full">
+        <span class="lb" style="font-weight:600;color:var(--ink)">Minha avaliação</span>
+        <div class="score" style="margin:6px 0 2px"><div class="num" id="ffsNum">–</div><div><span class="stars" aria-hidden="true"><i id="ffsStars" style="width:0"></i></span><div class="of">Nota final · média dos critérios que você avaliar (0 a 5). Deixe em branco o que não quiser avaliar.</div></div></div>
+        <div id="fRates"></div>
+        <button type="button" class="addcrit" id="fAddCrit">+ Adicionar critério</button>
+      </div>
+      <div class="full"><label class="lb" for="fCm" style="font-weight:600;color:var(--ink)">Meus comentários</label><textarea class="field" id="fCm" placeholder="O que ficou com você depois dessa leitura?"></textarea></div>
+      <div class="full">
         <span class="lb">Capa</span>
         <div class="cover-pick">
           <div class="prev" id="cPrev">sem capa</div>
@@ -736,12 +743,12 @@ function renderInfo(){
     ${ctxHTML(b, ro)}
     <div class="sec"><h3>${ro ? 'Avaliação de ' + esc(first(viewing.profile)) : 'Minha avaliação'}</h3>
       <div class="score"><div class="num" id="fsNum">${fmtNum(fs)}</div><div><span class="stars" aria-hidden="true"><i id="fsStars" style="width:${(fs || 0) / 5 * 100}%"></i></span><div class="of">Nota final · média dos critérios avaliados (0 a 5)</div></div></div>
-      <div id="rates">${b.ratings.map((r, i) => rateRow(r, i, ro)).join('')}</div>
-      ${ro ? '' : '<button class="addcrit" id="addCrit">+ Adicionar critério</button>'}
+      ${(() => { const rated = b.ratings.map((r, i) => [r, i]).filter(([r]) => r.value != null);
+        return rated.length ? `<div id="rates">${rated.map(([r, i]) => rateRow(r, i, true)).join('')}</div>`
+          : `<p class="ainote" style="margin-top:0">${ro ? 'Ainda sem avaliação.' : 'Ainda sem avaliação. Clique em “Editar” para dar suas notas.'}</p>`; })()}
     </div>
-    ${ro ? `<div class="sec"><h3>Comentários de ${esc(first(viewing.profile))}</h3><p class="ro-cm">${b.comments ? esc(b.comments) : '<span style="color:var(--mute)">Sem comentários.</span>'}</p></div>`
-    : `<div class="sec"><h3>Meus comentários</h3><textarea class="field" id="cm" placeholder="O que ficou com você depois dessa leitura?">${esc(b.comments || '')}</textarea><div class="saved" id="saved"></div></div>
-    <div class="actions"><button class="btn ghost" id="editB">Editar dados</button><button class="btn ghost" id="delB">Excluir livro</button></div>`}`;
+    <div class="sec"><h3>${ro ? 'Comentários de ' + esc(first(viewing.profile)) : 'Meus comentários'}</h3><p class="ro-cm">${b.comments ? esc(b.comments) : `<span style="color:var(--mute)">${ro ? 'Sem comentários.' : 'Sem comentários ainda.'}</span>`}</p></div>
+    ${ro ? '' : '<div class="actions"><button class="btn" id="editB">Editar livro e avaliação</button><button class="btn ghost" id="delB">Excluir livro</button></div>'}`;
   const i = list.findIndex(x => x.id === b.id);
   $('#prevB').disabled = i <= 0; $('#nextB').disabled = i < 0 || i >= list.length - 1;
   $('#lookB').href = 'https://www.google.com/search?q=' + encodeURIComponent(`${b.title} ${b.author} livro`);
@@ -763,19 +770,6 @@ function rateRow(r, i, ro){
 }
 function bindInfo(){
   const b = current;
-  $('#rates').oninput = e => {
-    const row = e.target.closest('.rate'); if (!row) return; const i = +row.dataset.i;
-    if (e.target.type === 'range') { const v = +e.target.value; b.ratings[i].value = v; e.target.classList.remove('unset'); e.target.style.setProperty('--p', v * 20 + '%'); row.querySelector('output').textContent = fmtNum(v); updateScore(); }
-    else b.ratings[i].label = e.target.value;
-    autosave();
-  };
-  $('#rates').onclick = e => {
-    const x = e.target.closest('.x'); if (!x) return; const i = +x.closest('.rate').dataset.i, r = b.ratings[i];
-    if (CRITERIA.includes(r.label) && i < CRITERIA.length) r.value = null; else b.ratings.splice(i, 1);
-    $('#rates').innerHTML = b.ratings.map(rateRow).join(''); updateScore(); autosave();
-  };
-  $('#addCrit').onclick = () => { b.ratings.push({label: '', value: null}); $('#rates').innerHTML = b.ratings.map(rateRow).join(''); $('#rates .rate:last-child input').focus(); };
-  $('#cm').oninput = e => { b.comments = e.target.value; autosave(); };
   $('#editB').onclick = () => openForm(b);
   if ($('#ctxDetail')) $('#ctxDetail').onclick = async e => {
     const btn = e.currentTarget, m = $('#ctxDMsg'); btn.disabled = true; m.textContent = 'Gerando com IA… leva alguns segundos.';
@@ -823,13 +817,31 @@ function openForm(b){
   const set = (id, v) => $(id).value = v ?? '';
   set('#fT', form.title); set('#fA', form.author); set('#fC', form.category); set('#fP', form.published); set('#fN', form.pages);
   set('#fS', form.status); set('#fI', form.startDate); set('#fF', form.endDate); set('#fY', form.synopsis);
-  set('#fH', ctxText(form.context));
+  set('#fH', ctxText(form.context)); set('#fCm', form.comments);
+  form.ratings = (form.ratings && form.ratings.length ? form.ratings : CRITERIA.map(label => ({label, value: null}))).map(r => ({...r}));
+  drawFormRates();
   $('#ctxMsg').textContent = 'A sinopse e o contexto são preenchidos automaticamente ao escolher um livro na busca. Você pode editar.';
   set('#fUrl', form.cover && !form.cover.startsWith('data:') ? form.cover : ''); set('#look', ''); $('#results').innerHTML = ''; $('#fMsg').textContent = '';
   form.color = form.color || PALETTE[hash(form.id) % PALETTE.length];
   drawCover(); drawSwatches();
   $('#fm').classList.remove('hide'); setTimeout(() => (b ? $('#fT') : $('#look')).focus(), 50);
 }
+function drawFormRates(){
+  $('#fRates').innerHTML = form.ratings.map((r, i) => rateRow(r, i, false)).join('');
+  const fs = finalScore(form); $('#ffsNum').textContent = fmtNum(fs); $('#ffsStars').style.width = (fs || 0) / 5 * 100 + '%';
+}
+$('#fRates').oninput = e => {
+  const row = e.target.closest('.rate'); if (!row) return; const i = +row.dataset.i;
+  if (e.target.type === 'range') { const v = +e.target.value; form.ratings[i].value = v; e.target.classList.remove('unset'); e.target.style.setProperty('--p', v * 20 + '%'); row.querySelector('output').textContent = fmtNum(v);
+    const fs = finalScore(form); $('#ffsNum').textContent = fmtNum(fs); $('#ffsStars').style.width = (fs || 0) / 5 * 100 + '%'; }
+  else form.ratings[i].label = e.target.value;
+};
+$('#fRates').onclick = e => {
+  const x = e.target.closest('.x'); if (!x) return; const i = +x.closest('.rate').dataset.i, r = form.ratings[i];
+  if (CRITERIA.includes(r.label) && i < CRITERIA.length) r.value = null; else form.ratings.splice(i, 1);
+  drawFormRates();
+};
+$('#fAddCrit').onclick = () => { form.ratings.push({label: '', value: null}); drawFormRates(); $('#fRates .rate:last-child input').focus(); };
 function closeForm(){ $('#fm').classList.add('hide'); }
 function drawCover(){ $('#cPrev').innerHTML = form.cover ? `<img src="${esc(form.cover)}" alt="" onerror="this.parentElement.textContent='link inválido'">` : 'sem capa'; }
 function drawSwatches(){ $('#sw').innerHTML = PALETTE.map(c => `<button type="button" data-c="${c}" class="${c === form.color ? 'on' : ''}" style="background:${c}" aria-label="Cor ${c}"></button>`).join(''); }
@@ -855,6 +867,8 @@ $('#bookForm').onsubmit = async e => {
   if (v('#fI') && v('#fF') && v('#fF') < v('#fI')) return $('#fMsg').textContent = 'A data de término está antes da data de início.';
   Object.assign(form, {title: v('#fT'), author: v('#fA'), category: v('#fC'), published: v('#fP'), pages: v('#fN') ? +v('#fN') : null, status: v('#fS'), startDate: v('#fI'), endDate: v('#fF'), synopsis: v('#fY'), updatedAt: new Date().toISOString()});
   form.context = v('#fH') || null;
+  form.comments = $('#fCm').value.trim();
+  form.ratings = form.ratings.filter(r => r.label.trim() || r.value != null).map(r => ({label: r.label.trim() || 'Critério', value: r.value}));
   $('#fSave').disabled = true;
   try {
     await S.save(form);
