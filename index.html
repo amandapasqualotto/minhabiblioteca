@@ -250,6 +250,28 @@ input[type=range].unset::-webkit-slider-thumb{border-color:var(--line)}
 .reply .del{border:0;background:none;color:var(--mute);font-size:13px;min-height:32px;padding:0 4px}
 .rform{display:flex;gap:8px;margin-top:8px;align-items:flex-end}
 .rform textarea{min-height:44px;height:44px;resize:vertical}
+.views{display:flex;justify-content:center;gap:6px;margin:4px 0 6px;flex-wrap:wrap}
+.views .pill{min-height:42px;font-size:15px;padding:9px 18px}
+.views .pill .n{font:500 12px var(--mono);opacity:.7;margin-left:2px}
+.tbr{max-width:760px;margin:0 auto;padding:10px max(5vw,16px) 40px}
+.tbr-head{text-align:center;margin:18px 0 18px}
+.tbr-head h2{font:italic 400 38px/1.1 var(--serif);margin:0 0 6px}
+.tbr-head p{color:var(--mute);margin:0}
+.quick{display:flex;gap:8px}
+.quick .field{flex:1}.quick .btn{flex:none}
+.tbr-manual{border:0;background:none;color:var(--accent);font-weight:500;min-height:40px;padding:6px 0}
+.tbr-list{margin-top:18px}
+.tcard{display:flex;gap:14px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}
+.tcard .mini{width:54px;aspect-ratio:2/3;border-radius:2px 4px 4px 2px;flex:none;overflow:hidden;position:relative;box-shadow:0 8px 12px -8px var(--shadow);border:0;padding:0;cursor:pointer}
+.tcard .mini img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.tcard .mini span{position:absolute;inset:6px 4px;display:grid;place-items:center;font:500 9px/1.1 var(--serif);text-align:center;overflow:hidden}
+.tcard .body{flex:1}
+.tcard .body b{display:block;font:500 20px/1.2 var(--serif)}
+.tcard small{display:block;color:var(--mute);font-size:13.5px}
+.tcard .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+@media(max-width:560px){.tcard{flex-wrap:wrap}.tcard .acts{width:100%;justify-content:flex-start;padding-left:68px}}
+.help-link{border:0;background:none;color:var(--mute);font-size:14px;text-decoration:underline;min-height:40px;width:100%}
+.mail{font:500 15px var(--mono);word-break:break-all;background:var(--bg2);padding:10px 14px;border-radius:10px;display:block;margin:6px 0 0}
 .ro-cm{font:400 19px/1.5 var(--serif);white-space:pre-line;margin:0}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -276,6 +298,7 @@ input[type=range].unset::-webkit-slider-thumb{border-color:var(--line)}
       <div class="msg" id="aMsg" role="status"></div>
       <button class="btn" style="width:100%" id="aSubmit">Entrar</button>
       <button type="button" class="addcrit" id="aForgot" style="width:100%">Esqueci minha senha</button>
+      <button type="button" class="help-link" id="aHelp">Precisa de ajuda? Fale com o suporte</button>
       <p class="demo-note hide" id="demoNote">Modo demonstração: a conta e os livros ficam salvos só neste navegador. Para login real e acesso de qualquer aparelho, publique com o Firebase configurado.</p>
     </form>
   </div>
@@ -286,12 +309,17 @@ input[type=range].unset::-webkit-slider-thumb{border-color:var(--line)}
   <nav class="top">
     <button class="pill mono" id="addBtn">+ Adicionar livro</button>
     <button class="pill mono" id="peopleBtn">Pessoas <span class="badge hide" id="reqBadge"></span></button>
+    <button class="pill mono" id="helpBtn">Suporte</button>
     <button class="pill mono" id="outBtn">Sair</button>
   </nav>
   <header class="hero">
     <h1><span id="typed"></span><span class="caret"></span></h1>
     <div class="handle" id="handle"></div>
     <div class="count mono" id="count"></div>
+    <div class="views" id="views" role="tablist">
+      <button class="pill on" data-view="shelf" role="tab">Estante</button>
+      <button class="pill" data-view="tbr" role="tab">Quero ler <span class="n" id="tbrN"></span></button>
+    </div>
     <input class="search" id="q" placeholder="O que você procura?" aria-label="Buscar livro, autor ou categoria">
   </header>
   <div class="lock hide" id="lock"></div>
@@ -304,16 +332,14 @@ input[type=range].unset::-webkit-slider-thumb{border-color:var(--line)}
     <div class="plank"></div>
   </section>
 
-  <div class="shelf-head" id="headTo">
-    <span class="mono">Próximas leituras</span>
-    <h2>Estante quero ler</h2>
-    <small id="countTo"></small>
-  </div>
-  <section class="shelf-wrap" id="wrapTo">
-    <button class="arrow l" data-dir="-1" aria-label="Rolar estante para a esquerda">‹</button>
-    <div class="shelf" id="shelfTo"></div>
-    <button class="arrow r" data-dir="1" aria-label="Rolar estante para a direita">›</button>
-    <div class="plank"></div>
+  <section class="tbr hide" id="tbr">
+    <div class="tbr-head"><h2>Próximas leituras</h2><p id="tbrSub">Os livros que você quer ler. Busque pelo título e coloque na lista com um toque.</p></div>
+    <div id="tbrAdd">
+      <div class="quick"><input class="field" id="qk" placeholder="Buscar livro para adicionar…" aria-label="Buscar livro para a lista Quero ler"><button class="btn" id="qkGo">Buscar</button></div>
+      <div class="results" id="qkRes"></div>
+      <button class="tbr-manual" id="qkManual">ou adicionar à mão</button>
+    </div>
+    <div class="tbr-list" id="tbrList"></div>
   </section>
 
   <div class="bar">
@@ -465,6 +491,24 @@ input[type=range].unset::-webkit-slider-thumb{border-color:var(--line)}
   </div>
 </div>
 
+<!-- ================= SUPORTE ================= -->
+<div class="modal hide" id="hm">
+  <form class="form" id="helpForm" novalidate style="width:min(520px,100%)">
+    <h2>Suporte</h2>
+    <p class="hint">Deu algum problema ou tem uma sugestão? Me conta aqui que eu respondo por e-mail.</p>
+    <label class="lb" for="hMsg">O que aconteceu?</label>
+    <textarea class="field" id="hMsg" placeholder="Ex.: quando clico em Salvar, aparece uma mensagem de erro…"></textarea>
+    <p class="ainote">O botão abre o seu aplicativo de e-mail com a mensagem pronta. Se ele não abrir, mande direto para:</p>
+    <span class="mail" id="hMail"></span>
+    <div class="msg" id="hNote"></div>
+    <div class="form-foot">
+      <button type="button" class="btn ghost" id="hClose">Fechar</button>
+      <button type="button" class="btn ghost" id="hCopy">Copiar e-mail</button>
+      <a class="btn" id="hSend" href="#" style="text-decoration:none;display:inline-flex;align-items:center">Enviar e-mail</a>
+    </div>
+  </form>
+</div>
+
 <datalist id="cats"></datalist>
 <div class="toast" id="toast"></div>
 
@@ -483,6 +527,8 @@ const FIREBASE_CONFIG = {
   messagingSenderId: "81440343556",
   appId: "1:81440343556:web:6e990e55fb71f90b039751"
 };
+/* E-MAIL DE SUPORTE: coloque entre as aspas o e-mail que vai receber as mensagens de ajuda */
+const SUPPORT_EMAIL = '';
 </script>
 <script>
 {
@@ -626,6 +672,7 @@ const ERR = {
 };
 
 /* ---------------- Estado ---------------- */
+let view = 'shelf';
 let S, books = [], cat = 'Todos', query = '', current = null, list = [], tab = 'in', form = {}, viewing = null, pendingSignup = null, ptab = 'search';
 const UNAME = /^[a-z0-9._]{3,20}$/;
 const cleanU = v => v.trim().toLowerCase().replace(/^@/, '');
@@ -674,7 +721,7 @@ function setMode(visitor){
   $('#backBtn').classList.toggle('hide', !visitor);
 }
 async function showMine(){
-  viewing = null; cat = 'Todos'; query = ''; $('#q').value = ''; setMode(false);
+  viewing = null; view = 'shelf'; cat = 'Todos'; query = ''; $('#q').value = ''; setMode(false);
   $('#owner').textContent = 'biblioteca de ' + (first(S.profile) || first(S.user) || 'você');
   $('#handle').innerHTML = S.profile ? `@${esc(S.profile.username)}` : '';
   try { books = await S.list(); } catch (e) { books = []; toast('Não consegui carregar seus livros.'); }
@@ -686,7 +733,7 @@ async function viewProfile(u, openId){
   let fm = null;
   try { [p, st, fm] = await Promise.all([S.getProfile(u), S.statusWith(u), S.followsMe(u).catch(() => null)]); } catch {}
   if (!p) return toast('Não encontrei esse perfil.');
-  viewing = {uid: u, profile: p, status: st, followsMe: fm}; cat = 'Todos'; query = ''; $('#q').value = ''; setMode(true);
+  viewing = {uid: u, profile: p, status: st, followsMe: fm}; view = 'shelf'; cat = 'Todos'; query = ''; $('#q').value = ''; setMode(true);
   books = [];
   if (st === 'accepted') { try { books = await S.list(u); } catch { toast('Não consegui abrir essa biblioteca.'); } }
   $('#owner').textContent = 'biblioteca de ' + first(p);
@@ -742,7 +789,10 @@ function ghosts(){ return Array.from({length: 9}, (_, i) => `<span class="spine 
 
 function render(){
   const locked = viewing && viewing.status !== 'accepted';
-  ['#wrapRead', '#wrapTo', '#headTo', '#chips', '#q'].forEach(x => $(x).classList.toggle('hide', !!locked));
+  ['#chips', '#q', '#views'].forEach(x => $(x).classList.toggle('hide', !!locked));
+  $('#wrapRead').classList.toggle('hide', !!locked || view !== 'shelf');
+  $('#tbr').classList.toggle('hide', !!locked || view !== 'tbr');
+  document.querySelectorAll('#views [data-view]').forEach(b => { b.classList.toggle('on', b.dataset.view === view); b.setAttribute('aria-selected', b.dataset.view === view); });
   $('#lock').classList.toggle('hide', !locked);
   if (locked) {
     $('#lock').innerHTML = `<h3>Biblioteca privada</h3><p>Para ver os livros e as avaliações de @${esc(viewing.profile.username)}, ${viewing.status === 'pending' ? 'espere seu pedido ser aceito.' : 'envie um pedido para seguir. Essa pessoa precisa aceitar.'}</p>`;
@@ -759,9 +809,9 @@ function render(){
   $('#shelfRead').innerHTML = read.length ? read.map(spineHTML).join('') : books.length
     ? `<p class="empty">Nenhum livro lido encontrado com esse filtro.</p>`
     : viewing ? ghosts() + `<div class="empty over"><p>Ainda não há livros lidos nesta estante.</p></div>` : ghosts() + `<div class="empty over"><p>Sua estante está vazia.<br>Que tal colocar o primeiro livro?</p><div class="acts2"><button class="btn" data-act="add">+ Adicionar livro</button><button class="btn ghost" data-act="seed">Ver com exemplos</button></div></div>`;
-  $('#shelfTo').innerHTML = to.length ? to.map(spineHTML).join('') : `<p class="empty">${books.some(b => b.status === 'quero') ? 'Nada encontrado aqui.' : 'Livros marcados como “Quero ler” aparecem nesta estante.'}</p>`;
-  $('#countTo').textContent = `${books.filter(b => b.status === 'quero').length} livros`;
-  list = [...read, ...to];
+  const nTo = books.filter(b => b.status === 'quero').length; $('#tbrN').textContent = nTo ? nTo : '';
+  renderTbr(to);
+  list = view === 'tbr' ? to : read;
   updateArrows(); requestAnimationFrame(fitSpines);
 }
 $('#chips').onclick = e => { const b = e.target.closest('[data-cat]'); if (b) { cat = b.dataset.cat; render(); } };
@@ -951,6 +1001,7 @@ document.addEventListener('keydown', e => {
   if (!$('#um').classList.contains('hide')) return;
   if (!$('#sm').classList.contains('hide')) { if (e.key === 'Escape') $('#sm').classList.add('hide'); return; }
   if (!$('#shm').classList.contains('hide')) { if (e.key === 'Escape') $('#shm').classList.add('hide'); return; }
+  if (!$('#hm').classList.contains('hide')) { if (e.key === 'Escape') $('#hm').classList.add('hide'); return; }
   if (!current && !$('#pp').classList.contains('hide')) { if (e.key === 'Escape') closePeople(); return; }
   if (!current || ['INPUT','TEXTAREA'].includes(document.activeElement.tagName)) return;
   if (e.key === 'Escape') closeBook(); if (e.key === 'ArrowLeft') step(-1); if (e.key === 'ArrowRight') step(1);
@@ -1241,6 +1292,74 @@ $('#shGo').onclick = async () => {
     else $('#shMsg').textContent = 'Este navegador não compartilha imagens direto. Use “Baixar imagem” e poste pelo Instagram.';
   } catch (e) { if (e.name !== 'AbortError') $('#shMsg').textContent = 'Não deu para compartilhar daqui. Use “Baixar imagem”.'; }
 };
+
+/* ---------------- Quero ler (versão simples) ---------------- */
+$('#views').onclick = e => { const b = e.target.closest('[data-view]'); if (!b) return; view = b.dataset.view; render(); };
+function renderTbr(to){
+  const mine = !viewing;
+  $('#tbrAdd').classList.toggle('hide', !mine);
+  $('#tbrSub').textContent = mine ? 'Os livros que você quer ler. Busque pelo título e coloque na lista com um toque.' : `Os livros que ${first(viewing.profile)} quer ler.`;
+  $('#tbrList').innerHTML = to.length ? to.map(b => {
+    const c = b.color || PALETTE[hash(b.id + b.title) % PALETTE.length];
+    const meta = [b.author, b.published ? String(b.published).slice(0, 4) : '', b.pages ? b.pages + ' págs.' : ''].filter(Boolean).join(' · ');
+    return `<div class="tcard" data-id="${esc(b.id)}"><button class="mini" data-t="open" style="background:${c};color:${textOn(c)}" aria-label="Ver ${esc(b.title)}">${b.cover ? `<img src="${esc(b.cover)}" alt="" onerror="this.remove()">` : ''}<span>${esc(b.title)}</span></button>
+      <div class="body"><b>${esc(b.title)}</b><small>${esc(meta)}</small>${b.suggestedBy ? `<small>Sugerido por @${esc(b.suggestedBy)}</small>` : ''}</div>
+      <div class="acts">${mine ? '<button class="sbtn pri" data-t="start">Comecei a ler</button>' : ''}<button class="sbtn" data-t="open">Ver</button>${mine ? '<button class="sbtn" data-t="del">Remover</button>' : ''}</div></div>`;
+  }).join('') : `<p class="pempty">${books.some(b => b.status === 'quero') ? 'Nenhum livro encontrado com esse filtro.' : mine ? 'Sua lista está vazia. Busque um livro acima para começar.' : 'Nenhum livro na lista ainda.'}</p>`;
+}
+$('#tbrList').onclick = async e => {
+  const btn = e.target.closest('[data-t]'); if (!btn) return;
+  const id = btn.closest('.tcard').dataset.id, b = books.find(x => x.id === id); if (!b) return;
+  if (btn.dataset.t === 'open') return openBook(id);
+  if (btn.dataset.t === 'del') {
+    if (!btn.dataset.sure) { btn.dataset.sure = 1; btn.textContent = 'Remover mesmo?'; btn.classList.add('warn'); return; }
+    try { await S.remove(id); books = books.filter(x => x.id !== id); render(); toast('Removido da lista'); } catch { toast('Não consegui remover.'); }
+    return;
+  }
+  if (btn.dataset.t === 'start') {
+    b.status = 'lendo'; b.startDate = b.startDate || todayISO(); b.updatedAt = new Date().toISOString();
+    try { await S.save(b); render(); toast('Boa leitura! O livro foi para a estante.'); } catch { toast('Não consegui salvar.'); }
+  }
+};
+async function quickSearch(){
+  const q = $('#qk').value.trim(), box = $('#qkRes'); if (!q) return;
+  box.innerHTML = '<small style="color:var(--mute)">Procurando…</small>';
+  try { quickSearch.items = await searchBooks(q); box.innerHTML = quickSearch.items.length ? resultsHTML(quickSearch.items.slice(0, 6)) : '<small style="color:var(--mute)">Nada encontrado. Tente outro termo ou adicione à mão.</small>'; }
+  catch { box.innerHTML = '<small style="color:var(--mute)">A busca não está disponível aqui. Use “adicionar à mão”.</small>'; }
+}
+$('#qkGo').onclick = quickSearch;
+$('#qk').onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); quickSearch(); } };
+$('#qkRes').onclick = async e => {
+  const el = e.target.closest('[data-i]'); if (!el) return; const v = quickSearch.items[+el.dataset.i];
+  const nb = {id: uid(), title: v.title, author: v.author, published: v.published || '', pages: v.pages || null, category: DEFAULT_CATS.includes(v.category) ? v.category : '', synopsis: v.synopsis || '', cover: v.cover || '', status: 'quero', ratings: CRITERIA.map(label => ({label, value: null})), comments: '', createdAt: new Date().toISOString()};
+  try { await S.save(nb); books.push(nb); $('#qk').value = ''; $('#qkRes').innerHTML = ''; render(); toast('Adicionado em Quero ler'); }
+  catch { toast('Não consegui adicionar.'); return; }
+  /* completa sinopse, categoria e contexto em segundo plano, se a IA estiver disponível */
+  try { const j = await aiContext(nb);
+    if (!nb.synopsis && j.synopsis) nb.synopsis = j.synopsis; if (!nb.category && j.category) nb.category = j.category;
+    if (!nb.published && j.published) nb.published = j.published; if (!nb.pages && j.pages) nb.pages = j.pages; if (j.context) nb.context = j.context;
+    await S.save(nb); render(); } catch {}
+};
+$('#qkManual').onclick = () => { openForm(); $('#fS').value = 'quero'; };
+
+/* ---------------- Suporte ---------------- */
+function openHelp(){
+  $('#hNote').textContent = ''; $('#hMsg').value = '';
+  $('#hMail').textContent = SUPPORT_EMAIL || 'O e-mail de suporte ainda não foi configurado.';
+  $('#hSend').classList.toggle('hide', !SUPPORT_EMAIL); $('#hCopy').classList.toggle('hide', !SUPPORT_EMAIL);
+  buildMail(); $('#hm').classList.remove('hide'); setTimeout(() => $('#hMsg').focus(), 50);
+}
+function buildMail(){
+  if (!SUPPORT_EMAIL) return;
+  const who = S && S.profile ? `@${S.profile.username}` : (S && S.user ? S.user.email : 'sem login');
+  const body = `${$('#hMsg').value.trim() || '(descreva o problema aqui)'}\n\n---\nUsuário: ${who}\nPágina: ${location.href}\nNavegador: ${navigator.userAgent}`;
+  $('#hSend').href = 'mailto:' + SUPPORT_EMAIL + '?subject=' + encodeURIComponent('Suporte · Minha Biblioteca') + '&body=' + encodeURIComponent(body);
+}
+$('#hMsg').oninput = buildMail;
+$('#helpBtn').onclick = openHelp; $('#aHelp').onclick = openHelp;
+$('#hClose').onclick = () => $('#hm').classList.add('hide');
+$('#hm').onclick = e => { if (e.target.id === 'hm') $('#hm').classList.add('hide'); };
+$('#hCopy').onclick = async () => { try { await navigator.clipboard.writeText(SUPPORT_EMAIL); $('#hNote').className = 'msg ok'; $('#hNote').textContent = 'E-mail copiado.'; } catch { $('#hNote').className = 'msg'; $('#hNote').textContent = 'Não consegui copiar. Selecione o endereço acima.'; } };
 
 /* ---------------- Pessoas ---------------- */
 async function refreshRequests(){
