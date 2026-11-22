@@ -1,9 +1,9 @@
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:1D1D1B,60:3A3835,100:9B3B2E&height=220&section=header&text=Minha%20Biblioteca&fontSize=48&fontColor=EFEEEB&animation=fadeIn&fontAlignY=38&desc=Virtual%20bookshelf%20%C3%97%20Reading%20journal%20%C3%97%20Book%20ratings&descAlignY=58&descSize=18" width="100%" alt="banner"/>
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:0B1F3A,60:1E4E8C,100:3B82C4&height=220&section=header&text=Minha%20Biblioteca&fontSize=48&fontColor=EAF2FB&animation=fadeIn&fontAlignY=38&desc=Virtual%20bookshelf%20%C3%97%20Reading%20journal%20%C3%97%20Book%20ratings&descAlignY=58&descSize=18" width="100%" alt="banner"/>
 
 <a href="https://git.io/typing-svg">
-  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=20&duration=3500&pause=900&color=9B3B2E&center=true&vCenter=true&width=760&lines=Uma+estante+virtual+para+os+meus+livros;Siga+amigos+e+veja+o+que+eles+leram;Pull+a+book+from+the+shelf+to+open+its+card;Notas+de+0+a+5+por+crit%C3%A9rio+%2B+nota+final;HTML+%C2%B7+CSS+%C2%B7+JavaScript+%C2%B7+Firebase" alt="Typing SVG" />
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=20&duration=3500&pause=900&color=3B82C4&center=true&vCenter=true&width=760&lines=Uma+estante+virtual+para+os+meus+livros;Siga+amigos+e+veja+o+que+eles+leram;Pull+a+book+from+the+shelf+to+open+its+card;Notas+de+0+a+5+por+crit%C3%A9rio+%2B+nota+final;HTML+%C2%B7+CSS+%C2%B7+JavaScript+%C2%B7+Firebase" alt="Typing SVG" />
 </a>
 
 <br/><br/>
@@ -12,10 +12,10 @@
 
 <br/>
 
-![Status](https://img.shields.io/badge/status-online-9B3B2E?style=for-the-badge&logo=vercel&logoColor=white)
-![JavaScript](https://img.shields.io/badge/JavaScript-vanilla-1D1D1B?style=for-the-badge&logo=javascript&logoColor=F7DF1E)
-![Firebase](https://img.shields.io/badge/Firebase-Auth%20%2B%20Firestore-3A3835?style=for-the-badge&logo=firebase&logoColor=white)
-![Google Books](https://img.shields.io/badge/Google%20Books-API-9B3B2E?style=for-the-badge&logo=google&logoColor=white)
+![Status](https://img.shields.io/badge/status-online-3B82C4?style=for-the-badge&logo=vercel&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-vanilla-0B1F3A?style=for-the-badge&logo=javascript&logoColor=F7DF1E)
+![Firebase](https://img.shields.io/badge/Firebase-Auth%20%2B%20Firestore-1E4E8C?style=for-the-badge&logo=firebase&logoColor=white)
+![Google Books](https://img.shields.io/badge/Google%20Books-API-3B82C4?style=for-the-badge&logo=google&logoColor=white)
 
 <br/>
 
@@ -85,19 +85,19 @@ other projects, it runs entirely on **free tiers**: no paid licenses, no server 
 <td width="50%" valign="top">
 
 ### 💻 Frontend
-<img src="https://img.shields.io/badge/HTML5-1D1D1B?style=for-the-badge&logo=html5&logoColor=white"/>
-<img src="https://img.shields.io/badge/CSS3-3A3835?style=for-the-badge&logo=css3&logoColor=white"/>
-<img src="https://img.shields.io/badge/JavaScript-9B3B2E?style=for-the-badge&logo=javascript&logoColor=F7DF1E"/>
-<img src="https://img.shields.io/badge/Web%20Animations%20API-1D1D1B?style=for-the-badge&logoColor=white"/>
+<img src="https://img.shields.io/badge/HTML5-0B1F3A?style=for-the-badge&logo=html5&logoColor=white"/>
+<img src="https://img.shields.io/badge/CSS3-1E4E8C?style=for-the-badge&logo=css3&logoColor=white"/>
+<img src="https://img.shields.io/badge/JavaScript-3B82C4?style=for-the-badge&logo=javascript&logoColor=F7DF1E"/>
+<img src="https://img.shields.io/badge/Web%20Animations%20API-0B1F3A?style=for-the-badge&logoColor=white"/>
 
 </td>
 <td width="50%" valign="top">
 
 ### ☁️ Backend & Hosting
-<img src="https://img.shields.io/badge/Firebase%20Auth-9B3B2E?style=for-the-badge&logo=firebase&logoColor=white"/>
-<img src="https://img.shields.io/badge/Firestore-3A3835?style=for-the-badge&logo=firebase&logoColor=white"/>
-<img src="https://img.shields.io/badge/Security%20Rules-1D1D1B?style=for-the-badge&logo=firebase&logoColor=white"/>
-<img src="https://img.shields.io/badge/Vercel-1D1D1B?style=for-the-badge&logo=vercel&logoColor=white"/>
+<img src="https://img.shields.io/badge/Firebase%20Auth-3B82C4?style=for-the-badge&logo=firebase&logoColor=white"/>
+<img src="https://img.shields.io/badge/Firestore-1E4E8C?style=for-the-badge&logo=firebase&logoColor=white"/>
+<img src="https://img.shields.io/badge/Security%20Rules-0B1F3A?style=for-the-badge&logo=firebase&logoColor=white"/>
+<img src="https://img.shields.io/badge/Vercel-0B1F3A?style=for-the-badge&logo=vercel&logoColor=white"/>
 
 </td>
 </tr>
@@ -105,17 +105,17 @@ other projects, it runs entirely on **free tiers**: no paid licenses, no server 
 <td width="50%" valign="top">
 
 ### 🔎 Data
-<img src="https://img.shields.io/badge/Google%20Books%20API-9B3B2E?style=for-the-badge&logo=google&logoColor=white"/>
-<img src="https://img.shields.io/badge/Canvas%20(cover%20color)-3A3835?style=for-the-badge&logoColor=white"/>
-<img src="https://img.shields.io/badge/localStorage%20(demo)-1D1D1B?style=for-the-badge&logoColor=white"/>
+<img src="https://img.shields.io/badge/Google%20Books%20API-3B82C4?style=for-the-badge&logo=google&logoColor=white"/>
+<img src="https://img.shields.io/badge/Canvas%20(cover%20color)-1E4E8C?style=for-the-badge&logoColor=white"/>
+<img src="https://img.shields.io/badge/localStorage%20(demo)-0B1F3A?style=for-the-badge&logoColor=white"/>
 
 </td>
 <td width="50%" valign="top">
 
 ### 🧰 Tools
-<img src="https://img.shields.io/badge/Git-9B3B2E?style=for-the-badge&logo=git&logoColor=white"/>
-<img src="https://img.shields.io/badge/GitHub-1D1D1B?style=for-the-badge&logo=github&logoColor=white"/>
-<img src="https://img.shields.io/badge/Claude%20(copilot)-3A3835?style=for-the-badge&logo=anthropic&logoColor=white"/>
+<img src="https://img.shields.io/badge/Git-3B82C4?style=for-the-badge&logo=git&logoColor=white"/>
+<img src="https://img.shields.io/badge/GitHub-0B1F3A?style=for-the-badge&logo=github&logoColor=white"/>
+<img src="https://img.shields.io/badge/Claude%20(copilot)-1E4E8C?style=for-the-badge&logo=anthropic&logoColor=white"/>
 
 </td>
 </tr>
@@ -148,7 +148,7 @@ other projects, it runs entirely on **free tiers**: no paid licenses, no server 
 ## 🧭 Architecture
 
 ```mermaid
-%%{init: {'theme':'base','themeVariables':{'primaryColor':'#EFEEEB','primaryBorderColor':'#9B3B2E','primaryTextColor':'#1D1D1B','lineColor':'#9B3B2E','edgeLabelBackground':'#FBFAF8','fontFamily':'Fira Code'}}}%%
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#EAF2FB','primaryBorderColor':'#3B82C4','primaryTextColor':'#0B1F3A','lineColor':'#3B82C4','edgeLabelBackground':'#F5F9FE','fontFamily':'Fira Code'}}}%%
 flowchart LR
     U["Reader"] --> APP["index.html<br/>on Vercel"]
     APP <--> AUTH["Firebase Auth<br/>e-mail + password"]
@@ -250,19 +250,19 @@ como meus outros projetos, roda inteiro em **planos gratuitos**: sem licenças p
 <td width="50%" valign="top">
 
 ### 💻 Frontend
-<img src="https://img.shields.io/badge/HTML5-1D1D1B?style=for-the-badge&logo=html5&logoColor=white"/>
-<img src="https://img.shields.io/badge/CSS3-3A3835?style=for-the-badge&logo=css3&logoColor=white"/>
-<img src="https://img.shields.io/badge/JavaScript-9B3B2E?style=for-the-badge&logo=javascript&logoColor=F7DF1E"/>
-<img src="https://img.shields.io/badge/Web%20Animations%20API-1D1D1B?style=for-the-badge&logoColor=white"/>
+<img src="https://img.shields.io/badge/HTML5-0B1F3A?style=for-the-badge&logo=html5&logoColor=white"/>
+<img src="https://img.shields.io/badge/CSS3-1E4E8C?style=for-the-badge&logo=css3&logoColor=white"/>
+<img src="https://img.shields.io/badge/JavaScript-3B82C4?style=for-the-badge&logo=javascript&logoColor=F7DF1E"/>
+<img src="https://img.shields.io/badge/Web%20Animations%20API-0B1F3A?style=for-the-badge&logoColor=white"/>
 
 </td>
 <td width="50%" valign="top">
 
 ### ☁️ Backend e Hospedagem
-<img src="https://img.shields.io/badge/Firebase%20Auth-9B3B2E?style=for-the-badge&logo=firebase&logoColor=white"/>
-<img src="https://img.shields.io/badge/Firestore-3A3835?style=for-the-badge&logo=firebase&logoColor=white"/>
-<img src="https://img.shields.io/badge/Security%20Rules-1D1D1B?style=for-the-badge&logo=firebase&logoColor=white"/>
-<img src="https://img.shields.io/badge/Vercel-1D1D1B?style=for-the-badge&logo=vercel&logoColor=white"/>
+<img src="https://img.shields.io/badge/Firebase%20Auth-3B82C4?style=for-the-badge&logo=firebase&logoColor=white"/>
+<img src="https://img.shields.io/badge/Firestore-1E4E8C?style=for-the-badge&logo=firebase&logoColor=white"/>
+<img src="https://img.shields.io/badge/Security%20Rules-0B1F3A?style=for-the-badge&logo=firebase&logoColor=white"/>
+<img src="https://img.shields.io/badge/Vercel-0B1F3A?style=for-the-badge&logo=vercel&logoColor=white"/>
 
 </td>
 </tr>
@@ -270,17 +270,17 @@ como meus outros projetos, roda inteiro em **planos gratuitos**: sem licenças p
 <td width="50%" valign="top">
 
 ### 🔎 Dados
-<img src="https://img.shields.io/badge/Google%20Books%20API-9B3B2E?style=for-the-badge&logo=google&logoColor=white"/>
-<img src="https://img.shields.io/badge/Canvas%20(cor%20da%20capa)-3A3835?style=for-the-badge&logoColor=white"/>
-<img src="https://img.shields.io/badge/localStorage%20(demo)-1D1D1B?style=for-the-badge&logoColor=white"/>
+<img src="https://img.shields.io/badge/Google%20Books%20API-3B82C4?style=for-the-badge&logo=google&logoColor=white"/>
+<img src="https://img.shields.io/badge/Canvas%20(cor%20da%20capa)-1E4E8C?style=for-the-badge&logoColor=white"/>
+<img src="https://img.shields.io/badge/localStorage%20(demo)-0B1F3A?style=for-the-badge&logoColor=white"/>
 
 </td>
 <td width="50%" valign="top">
 
 ### 🧰 Ferramentas
-<img src="https://img.shields.io/badge/Git-9B3B2E?style=for-the-badge&logo=git&logoColor=white"/>
-<img src="https://img.shields.io/badge/GitHub-1D1D1B?style=for-the-badge&logo=github&logoColor=white"/>
-<img src="https://img.shields.io/badge/Claude%20(copiloto)-3A3835?style=for-the-badge&logo=anthropic&logoColor=white"/>
+<img src="https://img.shields.io/badge/Git-3B82C4?style=for-the-badge&logo=git&logoColor=white"/>
+<img src="https://img.shields.io/badge/GitHub-0B1F3A?style=for-the-badge&logo=github&logoColor=white"/>
+<img src="https://img.shields.io/badge/Claude%20(copiloto)-1E4E8C?style=for-the-badge&logo=anthropic&logoColor=white"/>
 
 </td>
 </tr>
@@ -313,7 +313,7 @@ como meus outros projetos, roda inteiro em **planos gratuitos**: sem licenças p
 ## 🧭 Arquitetura
 
 ```mermaid
-%%{init: {'theme':'base','themeVariables':{'primaryColor':'#EFEEEB','primaryBorderColor':'#9B3B2E','primaryTextColor':'#1D1D1B','lineColor':'#9B3B2E','edgeLabelBackground':'#FBFAF8','fontFamily':'Fira Code'}}}%%
+%%{init: {'theme':'base','themeVariables':{'primaryColor':'#EAF2FB','primaryBorderColor':'#3B82C4','primaryTextColor':'#0B1F3A','lineColor':'#3B82C4','edgeLabelBackground':'#F5F9FE','fontFamily':'Fira Code'}}}%%
 flowchart LR
     U["Leitora"] --> APP["index.html<br/>na Vercel"]
     APP <--> AUTH["Firebase Auth<br/>e-mail + senha"]
@@ -367,9 +367,9 @@ Inspirado no conceito do [virtual-library.app](https://virtual-library.app). Dad
 
 Feito com 📚 por **Amanda Pasqualotto**
 
-<a href="https://www.linkedin.com/in/amanda-pasqualotto-b14ab6327/"><img src="https://img.shields.io/badge/LinkedIn-9B3B2E?style=for-the-badge&logo=linkedin&logoColor=white"/></a>
-<a href="https://github.com/amandapasqualotto"><img src="https://img.shields.io/badge/GitHub-1D1D1B?style=for-the-badge&logo=github&logoColor=white"/></a>
-<a href="https://minhabiblioteca-pearl.vercel.app"><img src="https://img.shields.io/badge/Ver%20o%20app-3A3835?style=for-the-badge&logo=vercel&logoColor=white"/></a>
+<a href="https://www.linkedin.com/in/amanda-pasqualotto-b14ab6327/"><img src="https://img.shields.io/badge/LinkedIn-3B82C4?style=for-the-badge&logo=linkedin&logoColor=white"/></a>
+<a href="https://github.com/amandapasqualotto"><img src="https://img.shields.io/badge/GitHub-0B1F3A?style=for-the-badge&logo=github&logoColor=white"/></a>
+<a href="https://minhabiblioteca-pearl.vercel.app"><img src="https://img.shields.io/badge/Ver%20o%20app-1E4E8C?style=for-the-badge&logo=vercel&logoColor=white"/></a>
 
 <br/><br/>
 
@@ -377,4 +377,4 @@ Feito com 📚 por **Amanda Pasqualotto**
 
 </div>
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:9B3B2E,40:3A3835,100:1D1D1B&height=120&section=footer" width="100%" alt="footer"/>
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:3B82C4,40:1E4E8C,100:0B1F3A&height=120&section=footer" width="100%" alt="footer"/>
