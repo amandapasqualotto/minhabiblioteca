@@ -274,6 +274,10 @@ input[type=range].unset::-webkit-slider-thumb{border-color:var(--line)}
 .mail{font:500 15px var(--mono);word-break:break-all;background:var(--bg2);padding:10px 14px;border-radius:10px;display:block;margin:6px 0 0}
 .logout-bottom{display:none}
 @media(max-width:600px){#outBtn{display:none}.logout-bottom{display:flex;justify-content:center;padding:48px 16px 24px}.logout-bottom .pill{min-width:160px;justify-content:center}}
+.qr{display:grid;place-items:center;margin:4px auto 14px;width:220px;height:220px;background:#fff;border-radius:16px;padding:14px}
+.qr img,.qr canvas{width:100%!important;height:auto!important}
+.share-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.share-row .btn{text-decoration:none;display:inline-flex;align-items:center}
 .ro-cm{font:400 19px/1.5 var(--serif);white-space:pre-line;margin:0}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -513,6 +517,23 @@ input[type=range].unset::-webkit-slider-thumb{border-color:var(--line)}
   </form>
 </div>
 
+<!-- ================= COMPARTILHAR PERFIL ================= -->
+<div class="modal hide" id="pm">
+  <div class="form" role="dialog" aria-modal="true" aria-labelledby="pmTitle" style="width:min(460px,100%);text-align:center">
+    <h2 id="pmTitle">Compartilhar meu perfil</h2>
+    <p class="hint">Mande seu link para os amigos te encontrarem e pedirem para te seguir.</p>
+    <div class="qr" id="qr" aria-label="QR code do seu perfil"></div>
+    <span class="mail" id="pLink"></span>
+    <div class="share-row" style="justify-content:center">
+      <button type="button" class="btn" id="pShare">Compartilhar</button>
+      <button type="button" class="btn ghost" id="pCopy">Copiar link</button>
+      <a class="btn ghost" id="pWa" href="#" target="_blank" rel="noopener">WhatsApp</a>
+    </div>
+    <div class="msg" id="pNote" role="status"></div>
+    <div class="form-foot" style="justify-content:center"><button type="button" class="btn ghost" id="pClose">Fechar</button></div>
+  </div>
+</div>
+
 <datalist id="cats"></datalist>
 <div class="toast" id="toast"></div>
 
@@ -584,6 +605,7 @@ const LocalStore = {
   /* social */
   async getProfile(u){ const p = P_()[u]; return p ? {...p, uid: u} : null; },
   async usernameTaken(n){ const m = LS.get('lib_usernames') || {}; return !!m[n] && m[n] !== this.user?.uid; },
+  async uidFor(n){ return (LS.get('lib_usernames') || {})[n] || null; },
   async setProfile(p){ const me = this.user.uid, names = LS.get('lib_usernames') || {}, profs = P_();
     if (names[p.username] && names[p.username] !== me) throw {code:'user/taken'};
     const old = profs[me]; if (old && old.username !== p.username) delete names[old.username];
@@ -631,6 +653,7 @@ async function makeFirebaseStore(cfg){
     /* social */
     async getProfile(u){ const s = await F.getDoc(d('users', u)); return s.exists() ? {uid: u, ...s.data()} : null; },
     async usernameTaken(n){ const s = await F.getDoc(d('usernames', n)); return s.exists() && s.data().uid !== this.user?.uid; },
+    async uidFor(n){ const s = await F.getDoc(d('usernames', n)); return s.exists() ? s.data().uid : null; },
     async setProfile(p){
       const me = this.user.uid, old = await this.getProfile(me);
       if (await this.usernameTaken(p.username)) throw {code:'user/taken'};
@@ -677,13 +700,17 @@ const ERR = {
 
 /* ---------------- Estado ---------------- */
 let view = 'shelf';
+/* Link de perfil: ?u=nome_de_usuario abre esse perfil depois do login */
+let wantedUser = (() => { try { const v = new URLSearchParams(location.search).get('u'); return v && /^[a-z0-9._]{3,20}$/.test(v.toLowerCase()) ? v.toLowerCase() : null; } catch { return null; } })();
+function clearWanted(){ try { const url = new URL(location.href); url.searchParams.delete('u'); history.replaceState(null, '', url.pathname + url.search + url.hash); } catch {} }
 let S, books = [], cat = 'Todos', query = '', current = null, list = [], tab = 'in', form = {}, viewing = null, pendingSignup = null, ptab = 'search';
 const UNAME = /^[a-z0-9._]{3,20}$/;
 const cleanU = v => v.trim().toLowerCase().replace(/^@/, '');
 const first = p => ((p && (p.name || p.username)) || '').split(' ')[0];
 
 /* ---------------- Login ---------------- */
-function showAuth(){ $('#app').classList.add('hide'); $('#ov').classList.add('hide'); $('#auth').classList.remove('hide'); setTab('in'); $('#aPass').value = ''; $('#demoNote').classList.toggle('hide', S.mode !== 'local'); }
+function showAuth(){ if (wantedUser) $('#auth .sub').textContent = `Entre ou crie sua conta para ver a biblioteca de @${wantedUser}.`;
+  $('#app').classList.add('hide'); $('#ov').classList.add('hide'); $('#auth').classList.remove('hide'); setTab('in'); $('#aPass').value = ''; $('#demoNote').classList.toggle('hide', S.mode !== 'local'); }
 function setTab(t){ tab = t; document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t)); $('#nameRow').classList.toggle('hide', t !== 'up'); $('#userRow').classList.toggle('hide', t !== 'up'); $('#aSubmit').textContent = t === 'up' ? 'Criar minha biblioteca' : 'Entrar'; $('#aPass').autocomplete = t === 'up' ? 'new-password' : 'current-password'; $('#aForgot').classList.toggle('hide', t === 'up'); $('#aMsg').textContent = ''; }
 document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => setTab(b.dataset.tab));
 $('#authForm').onsubmit = async e => {
@@ -717,6 +744,8 @@ async function enterApp(user){
   if (!S.profile && pendingSignup) { try { S.profile = await S.setProfile(pendingSignup); } catch (e) { toast(ERR[e.code] || 'Escolha outro nome de usuário.'); } }
   pendingSignup = null;
   await showMine();
+  if (wantedUser) { const w = wantedUser; wantedUser = null; clearWanted();
+    try { const u = await S.uidFor(w); if (u && u !== user.uid) await viewProfile(u); else if (!u) toast('Não encontrei @' + w + '.'); } catch {} }
   if (!S.profile) openUserModal(true);
   refreshRequests();
 }
@@ -727,7 +756,7 @@ function setMode(visitor){
 async function showMine(){
   viewing = null; view = 'shelf'; cat = 'Todos'; query = ''; $('#q').value = ''; setMode(false);
   $('#owner').textContent = 'biblioteca de ' + (first(S.profile) || first(S.user) || 'você');
-  $('#handle').innerHTML = S.profile ? `@${esc(S.profile.username)}` : '';
+  $('#handle').innerHTML = S.profile ? `<span>@${esc(S.profile.username)}</span><button class="sbtn" data-share-profile>Compartilhar perfil</button>` : '';
   try { books = await S.list(); } catch (e) { books = []; toast('Não consegui carregar seus livros.'); }
   type('Bem-vinda à minha biblioteca'); render(); scrollTo({top: 0});
 }
@@ -1006,6 +1035,7 @@ document.addEventListener('keydown', e => {
   if (!$('#sm').classList.contains('hide')) { if (e.key === 'Escape') $('#sm').classList.add('hide'); return; }
   if (!$('#shm').classList.contains('hide')) { if (e.key === 'Escape') $('#shm').classList.add('hide'); return; }
   if (!$('#hm').classList.contains('hide')) { if (e.key === 'Escape') $('#hm').classList.add('hide'); return; }
+  if (!$('#pm').classList.contains('hide')) { if (e.key === 'Escape') $('#pm').classList.add('hide'); return; }
   if (!current && !$('#pp').classList.contains('hide')) { if (e.key === 'Escape') closePeople(); return; }
   if (!current || ['INPUT','TEXTAREA'].includes(document.activeElement.tagName)) return;
   if (e.key === 'Escape') closeBook(); if (e.key === 'ArrowLeft') step(-1); if (e.key === 'ArrowRight') step(1);
@@ -1346,6 +1376,26 @@ $('#qkRes').onclick = async e => {
 };
 $('#qkManual').onclick = () => { openForm(); $('#fS').value = 'quero'; };
 
+/* ---------------- Compartilhar perfil ---------------- */
+const profileLink = () => { const base = /^https?:/.test(location.protocol) ? location.origin + location.pathname : 'https://minhabiblioteca-pearl.vercel.app/'; return base + '?u=' + encodeURIComponent(S.profile.username); };
+function loadQR(){ return window.QRCode ? Promise.resolve() : new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'; sc.onload = ok; sc.onerror = no; document.head.append(sc); }); }
+async function openProfileShare(){
+  if (!S.profile) return openUserModal(false);
+  const link = profileLink(), text = `Me segue na Minha Biblioteca para ver o que eu ando lendo: @${S.profile.username}`;
+  $('#pLink').textContent = link; $('#pNote').textContent = '';
+  $('#pWa').href = 'https://wa.me/?text=' + encodeURIComponent(text + '\n' + link);
+  $('#pShare').classList.toggle('hide', !navigator.share);
+  $('#pm').classList.remove('hide');
+  $('#qr').innerHTML = '';
+  try { await loadQR(); new QRCode($('#qr'), {text: link, width: 192, height: 192, colorDark: '#3A1F24', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M}); }
+  catch { $('#qr').classList.add('hide'); }
+}
+document.addEventListener('click', e => { if (e.target.closest('[data-share-profile]')) openProfileShare(); });
+$('#pClose').onclick = () => $('#pm').classList.add('hide');
+$('#pm').onclick = e => { if (e.target.id === 'pm') $('#pm').classList.add('hide'); };
+$('#pCopy').onclick = async () => { try { await navigator.clipboard.writeText(profileLink()); $('#pNote').className = 'msg ok'; $('#pNote').textContent = 'Link copiado. É só colar na conversa.'; } catch { $('#pNote').className = 'msg'; $('#pNote').textContent = 'Não consegui copiar. Selecione o link acima.'; } };
+$('#pShare').onclick = async () => { try { await navigator.share({title: 'Minha Biblioteca', text: `Me segue na Minha Biblioteca: @${S.profile.username}`, url: profileLink()}); } catch {} };
+
 /* ---------------- Suporte ---------------- */
 function openHelp(){
   $('#hNote').textContent = ''; $('#hMsg').value = '';
@@ -1384,7 +1434,7 @@ const A = (a, t, cls = '') => `<button class="sbtn ${cls}" data-a="${a}">${t}</b
 function relBtns(st){ return A('view', 'Ver') + (st === 'accepted' ? A('unfollow', 'Seguindo ✓') : st === 'pending' ? A('unfollow', 'Solicitado') : A('follow', 'Seguir', 'pri')); }
 async function drawPeople(){
   const me = S.user.uid, body = $('#pbody');
-  $('#meLine').innerHTML = S.profile ? `<span>Você é <b>@${esc(S.profile.username)}</b></span><button class="sbtn" id="editProf">Editar perfil</button>` : `<button class="sbtn pri" id="editProf">Criar nome de usuário</button>`;
+  $('#meLine').innerHTML = S.profile ? `<span>Você é <b>@${esc(S.profile.username)}</b></span><button class="sbtn pri" data-share-profile>Compartilhar meu perfil</button><button class="sbtn" id="editProf">Editar perfil</button>` : `<button class="sbtn pri" id="editProf">Criar nome de usuário</button>`;
   $('#editProf').onclick = () => openUserModal(false);
   document.querySelectorAll('#ptabs [data-pt]').forEach(b => b.classList.toggle('on', b.dataset.pt === ptab));
   const tabNow = ptab;
@@ -1514,7 +1564,7 @@ $('#userForm').onsubmit = async e => {
   if (!UNAME.test(un)) return m.textContent = 'Nome de usuário: 3 a 20 caracteres, só letras minúsculas, números, ponto e _.';
   $('#uSave').disabled = true; m.textContent = '';
   try { S.profile = await S.setProfile({username: un, name: nm}); $('#um').classList.add('hide'); toast('Perfil salvo');
-    if (!viewing) { $('#handle').innerHTML = '@' + esc(un); $('#owner').textContent = 'biblioteca de ' + first(S.profile); }
+    if (!viewing) { $('#handle').innerHTML = `<span>@${esc(un)}</span><button class="sbtn" data-share-profile>Compartilhar perfil</button>`; $('#owner').textContent = 'biblioteca de ' + first(S.profile); }
     if (!$('#pp').classList.contains('hide')) drawPeople();
   } catch (err) { m.textContent = ERR[err.code] || 'Não consegui salvar: ' + (err.message || err.code); }
   $('#uSave').disabled = false;

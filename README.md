@@ -143,6 +143,7 @@ other projects, it runs entirely on **free tiers**: no paid licenses, no server 
 | ⌨️ | **Navigation** | Previous / Next (also with arrow keys) and a "Look it up" shortcut |
 | 📝 | **One form for everything** | Book data, ratings and comments are filled in together; clicking a book shows only the final card |
 | 👤 | **Unique @username** | Reserved in a `usernames` collection, so no two people share the same handle |
+| 🔗 | **Profile link** | Share `?u=your_username` by link, WhatsApp or QR code; whoever opens it lands on your profile, ready to follow |
 | 🤝 | **Follow requests** | Ask to follow; the other person sees the request and chooses **Allow** or **Decline** |
 | 💌 | **Book suggestions** | People connected by a follow can recommend a book with a note; the receiver adds it to "Want to read" in one click, and the card shows who suggested it |
 | ❤️ | **Likes & replies** | Followers can like a book, like your review and reply to it in a thread; you can delete any reply on your books |
@@ -320,6 +321,7 @@ como meus outros projetos, roda inteiro em **planos gratuitos**: sem licenças p
 | ⌨️ | **Navegação** | Anterior / Próximo (também pelas setas do teclado) e atalho "Pesquisar" |
 | 📝 | **Um formulário para tudo** | Dados do livro, notas e comentários são preenchidos juntos; ao clicar no livro, aparece só a ficha final |
 | 👤 | **@nome de usuário único** | Reservado numa coleção `usernames`, então duas pessoas nunca têm o mesmo @ |
+| 🔗 | **Link do perfil** | Compartilhe `?u=seu_usuario` por link, WhatsApp ou QR code; quem abre cai direto no seu perfil, pronto para seguir |
 | 🤝 | **Pedidos para seguir** | Você pede para seguir; a outra pessoa vê o pedido e escolhe **Permitir** ou **Recusar** |
 | 💌 | **Sugestões de livros** | Quem se segue pode indicar um livro com um recado; quem recebe coloca na estante "Quero ler" com um clique, e a ficha mostra quem sugeriu |
 | ❤️ | **Curtidas e respostas** | Seguidores podem curtir o livro, curtir o seu comentário e responder numa conversa; você pode apagar qualquer resposta nos seus livros |
