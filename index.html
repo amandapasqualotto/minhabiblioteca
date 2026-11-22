@@ -214,7 +214,7 @@ input[type=range].unset::-webkit-slider-thumb{border-color:var(--line)}
 .sec h4:first-of-type{margin-top:4px}
 .ainote{font-size:13px;color:var(--mute);margin:12px 0 0}
 .ctx-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
-.ctx-box textarea{min-height:90px;margin-bottom:10px}
+.ctx-box textarea{margin-bottom:4px}
 .ro-cm{font:400 19px/1.5 var(--serif);white-space:pre-line;margin:0}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -326,10 +326,8 @@ input[type=range].unset::-webkit-slider-thumb{border-color:var(--line)}
       <div class="full"><label class="lb" for="fY">Sinopse</label><textarea class="field" id="fY"></textarea></div>
       <div class="full ctx-box">
         <div class="ctx-head"><span class="lb" style="margin:0;font-weight:600;color:var(--ink)">Contexto da obra</span><button type="button" class="btn ghost" id="ctxGo">✦ Gerar com IA</button></div>
-        <p class="ainote" id="ctxMsg" style="margin:0 0 10px">Preenchido automaticamente ao escolher um livro na busca. Você pode editar.</p>
-        <label class="lb" for="fH">Contexto histórico</label><textarea class="field" id="fH"></textarea>
-        <label class="lb" for="fV">Por que é inovadora</label><textarea class="field" id="fV"></textarea>
-        <label class="lb" for="fD">Por que se destaca</label><textarea class="field" id="fD"></textarea>
+        <p class="ainote" id="ctxMsg" style="margin:0 0 10px">A sinopse e o contexto são preenchidos automaticamente ao escolher um livro na busca. Você pode editar.</p>
+        <textarea class="field" id="fH" style="min-height:170px" aria-label="Contexto da obra" placeholder="Momento histórico em que foi escrita, o que trouxe de novo e por que se destaca."></textarea>
       </div>
       <div class="full">
         <span class="lb">Capa</span>
@@ -749,10 +747,12 @@ function renderInfo(){
   $('#lookB').href = 'https://www.google.com/search?q=' + encodeURIComponent(`${b.title} ${b.author} livro`);
   if (!ro) bindInfo();
 }
+/* Contexto pode ser texto (novo) ou objeto com 3 partes (versão anterior) */
+function ctxText(c){ if (!c) return ''; if (typeof c === 'string') return c; return [c.historico, c.inovacao, c.destaque].filter(Boolean).join('\n\n'); }
 function ctxHTML(b, ro){
-  const c = b.context || {}, parts = [['Contexto histórico', c.historico], ['Por que é inovadora', c.inovacao], ['Por que se destaca', c.destaque]].filter(x => x[1]);
-  if (parts.length) return `<div class="sec"><h3>Contexto da obra</h3>${parts.map(([h, t]) => `<h4>${h}</h4><p class="syn">${esc(t)}</p>`).join('')}<p class="ainote">Texto gerado com IA a partir do título e autor. Pode conter imprecisões.</p></div>`;
-  return ro ? '' : `<div class="sec"><h3>Contexto da obra</h3><button class="btn ghost" id="ctxDetail">✦ Gerar contexto com IA</button><p class="ainote" id="ctxDMsg">Explica o contexto histórico, por que a obra foi inovadora e por que se destaca.</p></div>`;
+  const t = ctxText(b.context);
+  if (t) return `<div class="sec"><h3>Contexto da obra</h3><p class="syn">${esc(t)}</p><p class="ainote">Texto gerado com IA a partir do título e autor. Pode conter imprecisões.</p></div>`;
+  return ro ? '' : `<div class="sec"><h3>Contexto da obra</h3><button class="btn ghost" id="ctxDetail">✦ Gerar contexto com IA</button><p class="ainote" id="ctxDMsg">Explica o momento histórico em que a obra foi escrita, o que trouxe de novo e por que se destaca. Também preenche a sinopse, se estiver vazia.</p></div>`;
 }
 function rateRow(r, i, ro){
   const v = r.value, custom = i >= CRITERIA.length || !CRITERIA.includes(r.label);
@@ -781,7 +781,7 @@ function bindInfo(){
     const btn = e.currentTarget, m = $('#ctxDMsg'); btn.disabled = true; m.textContent = 'Gerando com IA… leva alguns segundos.';
     try {
       const j = await aiContext(b);
-      b.context = j.context;
+      b.context = j.context || b.context;
       if (!b.synopsis && j.synopsis) b.synopsis = j.synopsis;
       if (!DEFAULT_CATS.includes(b.category) && j.category) b.category = j.category;
       if (!b.published && j.published) b.published = j.published;
@@ -823,8 +823,8 @@ function openForm(b){
   const set = (id, v) => $(id).value = v ?? '';
   set('#fT', form.title); set('#fA', form.author); set('#fC', form.category); set('#fP', form.published); set('#fN', form.pages);
   set('#fS', form.status); set('#fI', form.startDate); set('#fF', form.endDate); set('#fY', form.synopsis);
-  set('#fH', form.context?.historico); set('#fV', form.context?.inovacao); set('#fD', form.context?.destaque);
-  $('#ctxMsg').textContent = 'Preenchido automaticamente ao escolher um livro na busca. Você pode editar.';
+  set('#fH', ctxText(form.context));
+  $('#ctxMsg').textContent = 'A sinopse e o contexto são preenchidos automaticamente ao escolher um livro na busca. Você pode editar.';
   set('#fUrl', form.cover && !form.cover.startsWith('data:') ? form.cover : ''); set('#look', ''); $('#results').innerHTML = ''; $('#fMsg').textContent = '';
   form.color = form.color || PALETTE[hash(form.id) % PALETTE.length];
   drawCover(); drawSwatches();
@@ -854,8 +854,7 @@ $('#bookForm').onsubmit = async e => {
   if (!v('#fT') || !v('#fA')) return $('#fMsg').textContent = 'Preencha pelo menos título e autor(a).';
   if (v('#fI') && v('#fF') && v('#fF') < v('#fI')) return $('#fMsg').textContent = 'A data de término está antes da data de início.';
   Object.assign(form, {title: v('#fT'), author: v('#fA'), category: v('#fC'), published: v('#fP'), pages: v('#fN') ? +v('#fN') : null, status: v('#fS'), startDate: v('#fI'), endDate: v('#fF'), synopsis: v('#fY'), updatedAt: new Date().toISOString()});
-  const ctx = {historico: v('#fH'), inovacao: v('#fV'), destaque: v('#fD')};
-  form.context = (ctx.historico || ctx.inovacao || ctx.destaque) ? ctx : null;
+  form.context = v('#fH') || null;
   $('#fSave').disabled = true;
   try {
     await S.save(form);
@@ -897,19 +896,18 @@ $('#results').onclick = e => {
   $('#fY').value = v.synopsis || ''; if (DEFAULT_CATS.includes(v.category)) $('#fC').value = v.category;
   if (v.cover) { form.cover = v.cover; $('#fUrl').value = v.cover; drawCover(); }
   lookup.lang = v.language;
-  $('#results').innerHTML = '<small style="color:var(--mute)">Dados preenchidos. Gerando o contexto da obra…</small>';
+  $('#results').innerHTML = '<small style="color:var(--mute)">Dados preenchidos. Gerando a sinopse e o contexto da obra…</small>';
   fillWithAI(false);
 };
 /* Completa com IA: contexto sempre; sinopse, categoria, ano e páginas só se estiverem vazios */
 async function fillWithAI(manual){
   const t = $('#fT').value.trim(), msg = $('#ctxMsg'), btn = $('#ctxGo');
   if (!t) { msg.textContent = 'Preencha pelo menos o título antes.'; return; }
-  btn.disabled = true; msg.textContent = 'Gerando com IA… leva alguns segundos.';
+  btn.disabled = true; msg.textContent = 'Gerando sinopse e contexto com IA… leva alguns segundos.';
   try {
     const j = await aiContext({title: t, author: $('#fA').value.trim(), published: $('#fP').value.trim()});
-    const fill = (id, val) => { if (val && (manual || !$(id).value.trim())) $(id).value = val; };
-    fill('#fH', j.context.historico); fill('#fV', j.context.inovacao); fill('#fD', j.context.destaque);
-    if (j.synopsis && (!$('#fY').value.trim() || (lookup.lang && !String(lookup.lang).startsWith('pt')))) $('#fY').value = j.synopsis;
+    if (j.context && (manual || !$('#fH').value.trim())) $('#fH').value = j.context;
+    if (j.synopsis && (manual || !$('#fY').value.trim() || (lookup.lang && !String(lookup.lang).startsWith('pt')))) $('#fY').value = j.synopsis;
     if (j.category && !DEFAULT_CATS.includes($('#fC').value)) $('#fC').value = j.category;
     if (j.published && !$('#fP').value.trim()) $('#fP').value = j.published;
     if (j.pages && !$('#fN').value) $('#fN').value = j.pages;

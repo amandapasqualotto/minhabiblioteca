@@ -133,7 +133,7 @@ other projects, it runs entirely on **free tiers**: no paid licenses, no server 
 | 📚 | **Two shelves** | "Read / reading now" (with a ribbon on books in progress) and a **"Want to read"** shelf |
 | 🎬 | **Pull-out animation** | The spine lifts, flies to the center and rotates into the book's cover |
 | 🔎 | **Auto-fill** | Search by title: a Vercel function queries **Google Books** (with its own key) and falls back to **Open Library**, filling title, author, year, pages, synopsis, category and cover |
-| 🏛️ | **Work context (AI)** | **Gemini** writes the historical context, why the book was innovative and why it stands out, plus a spoiler-free synopsis in Portuguese |
+| 🏛️ | **Work context (AI)** | **Gemini** writes the book's context (historical moment, what was new, why it stands out) and a spoiler-free synopsis in Portuguese, with automatic retry and fallback models |
 | 🖼️ | **Cover upload** | The photo is resized in the browser and the **spine color is taken from the cover** |
 | ⭐ | **Rating by criteria** | 6 criteria from 0 to 5 (half points), plus **custom criteria** of your own |
 | ⏱️ | **Reading time** | Days between start and finish, pages per day, "reading for X days" on books in progress and your average per book |
@@ -307,7 +307,7 @@ como meus outros projetos, roda inteiro em **planos gratuitos**: sem licenças p
 | 📚 | **Duas estantes** | "Lidos / lendo agora" (com fitinha marcadora nos livros em andamento) e a estante **"Quero ler"** |
 | 🎬 | **Animação de tirar da estante** | A lombada sobe, voa até o centro e gira até virar a capa do livro |
 | 🔎 | **Preenchimento automático** | Busca pelo título: uma função na Vercel consulta o **Google Livros** (com chave própria) e, se falhar, o **Open Library**, preenchendo título, autor, ano, páginas, sinopse, categoria e capa |
-| 🏛️ | **Contexto da obra (IA)** | O **Gemini** escreve o contexto histórico, por que a obra foi inovadora e por que se destaca, além de uma sinopse sem spoilers em português |
+| 🏛️ | **Contexto da obra (IA)** | O **Gemini** escreve o contexto da obra (momento histórico, o que trouxe de novo, por que se destaca) e uma sinopse sem spoilers em português, com nova tentativa automática e modelos reserva |
 | 🖼️ | **Envio de capa** | A foto é redimensionada no próprio navegador e a **cor da lombada é tirada da capa** |
 | ⭐ | **Avaliação por critérios** | 6 critérios de 0 a 5 (de meio em meio ponto), além de **critérios personalizados** |
 | ⏱️ | **Tempo de leitura** | Dias entre o início e o fim, páginas por dia, "lendo há X dias" nos livros em andamento e a sua média por livro |

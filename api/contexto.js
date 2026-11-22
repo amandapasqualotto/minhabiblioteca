@@ -17,15 +17,13 @@ async function userFromToken(idToken) {
 const schema = {
   type: 'OBJECT',
   properties: {
-    historico: { type: 'STRING', description: 'Contexto histórico, social e pessoal do autor quando a obra foi escrita. 1 a 2 parágrafos.' },
-    inovacao: { type: 'STRING', description: 'O que a obra trouxe de novo ou de diferente para a época (forma, tema, estilo, ideias). 1 parágrafo.' },
-    destaque: { type: 'STRING', description: 'Por que a obra se destaca até hoje: recepção, influência, prêmios, legado. 1 parágrafo.' },
+    contexto: { type: 'STRING', description: 'Contexto da obra em 2 ou 3 parágrafos corridos, sem títulos: o momento histórico e a vida do autor quando foi escrita, o que trouxe de novo para a época e por que se destaca até hoje.' },
     sinopse: { type: 'STRING', description: 'Sinopse curta em português, sem spoilers do final, 3 a 5 frases.' },
     categoria: { type: 'STRING', enum: CATS },
     ano_publicacao: { type: 'STRING', description: 'Ano da primeira publicação original, ou vazio se não tiver certeza.' },
     paginas: { type: 'INTEGER', description: 'Número aproximado de páginas de uma edição comum em português, ou 0 se não souber.' }
   },
-  required: ['historico', 'inovacao', 'destaque', 'sinopse', 'categoria']
+  required: ['contexto', 'sinopse', 'categoria']
 };
 
 module.exports = async (req, res) => {
@@ -45,26 +43,38 @@ Explique o contexto histórico em que a obra foi escrita, por que foi inovadora 
 Regras: seja factual; se não conhecer bem a obra, diga isso com honestidade em vez de inventar fatos, datas, prêmios ou citações.
 Não revele o final da história.`;
 
-  const model = process.env.GEMINI_MODEL || 'gemini-flash-latest';
-  try {
-    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': process.env.GEMINI_API_KEY },
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: { responseMimeType: 'application/json', responseSchema: schema }
-      })
-    });
-    const j = await r.json();
-    if (!r.ok) return res.status(502).json({ error: (j.error && j.error.message) || 'Falha no Gemini.' });
-    const text = (((j.candidates || [])[0] || {}).content || {}).parts?.map(p => p.text || '').join('') || '{}';
-    const out = JSON.parse(text);
-    return res.status(200).json({
-      context: { historico: out.historico || '', inovacao: out.inovacao || '', destaque: out.destaque || '' },
-      synopsis: out.sinopse || '', category: CATS.includes(out.categoria) ? out.categoria : '',
-      published: out.ano_publicacao || '', pages: out.paginas > 0 ? out.paginas : null
-    });
-  } catch (e) {
-    return res.status(500).json({ error: 'Não consegui gerar o contexto agora.' });
+  // Se um modelo estiver sobrecarregado, tenta de novo e depois passa para o próximo
+  const models = [...new Set([process.env.GEMINI_MODEL, 'gemini-flash-latest', 'gemini-flash-lite-latest', 'gemini-3.5-flash', 'gemini-3.1-flash-lite'].filter(Boolean))];
+  const body = JSON.stringify({
+    contents: [{ role: 'user', parts: [{ text: prompt }] }],
+    generationConfig: { responseMimeType: 'application/json', responseSchema: schema }
+  });
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  let lastStatus = 0;
+  for (const model of models) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': process.env.GEMINI_API_KEY }, body
+        });
+        lastStatus = r.status;
+        if (r.ok) {
+          const j = await r.json();
+          const text = (((j.candidates || [])[0] || {}).content || {}).parts?.map(p => p.text || '').join('') || '{}';
+          const out = JSON.parse(text);
+          return res.status(200).json({
+            context: out.contexto || '', synopsis: out.sinopse || '',
+            category: CATS.includes(out.categoria) ? out.categoria : '',
+            published: out.ano_publicacao || '', pages: out.paginas > 0 ? out.paginas : null, model
+          });
+        }
+        if (r.status === 401 || r.status === 403) return res.status(502).json({ error: 'A chave do Gemini foi recusada. Confira a GEMINI_API_KEY na Vercel.' });
+        if (r.status === 404 || r.status === 400) break;           // modelo indisponível: vai para o próximo
+        await wait(700 * (attempt + 1));                            // 429/500/503: espera e tenta de novo
+      } catch (e) { await wait(500); }
+    }
   }
+  return res.status(503).json({ error: lastStatus === 429
+    ? 'A cota gratuita do Gemini acabou por agora. Tente de novo mais tarde.'
+    : 'A IA está muito ocupada neste momento. Espere alguns segundos e clique em “Gerar com IA” de novo.' });
 };
