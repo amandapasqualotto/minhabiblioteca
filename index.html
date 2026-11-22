@@ -425,6 +425,12 @@ const lum = hex => { const n = parseInt(hex.slice(1), 16); const r = n >> 16, g 
 const textOn = hex => lum(hex) > 0.6 ? '#1d1d1b' : '#f6f4ef';
 const fmtDate = d => { if (!d) return '—'; const [y,m,dd] = d.split('-'); return dd ? `${dd}/${m}/${y}` : d; };
 const fmtNum = n => n == null ? '—' : n.toFixed(1).replace('.', ',');
+const dayN = d => { const [y, m, dd] = (d || '').split('-').map(Number); return y && m && dd ? Date.UTC(y, m - 1, dd) / 864e5 : null; };
+const todayISO = () => { const t = new Date(); return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`; };
+const plural = (n, a, b) => `${n} ${n === 1 ? a : b}`;
+const fmtDays = n => n < 60 ? plural(n, 'dia', 'dias') : `${n} dias (~${Math.round(n / 30)} meses)`;
+/* Tempo de leitura: dias corridos entre início e fim, contando os dois (mesmo dia = 1 dia) */
+const readDays = b => { const a = dayN(b.startDate), z = dayN(b.status === 'lendo' && !b.endDate ? todayISO() : b.endDate); return a != null && z != null && z >= a ? z - a + 1 : null; };
 const finalScore = b => { const v = (b.ratings || []).map(r => r.value).filter(x => x != null); return v.length ? v.reduce((a, c) => a + c, 0) / v.length : null; };
 
 /* ---------------- Armazenamento: Firebase ou local ---------------- */
@@ -636,7 +642,8 @@ function render(){
   }
   const f = filtered(), read = f.filter(b => b.status !== 'quero').sort(sortRead), to = f.filter(b => b.status === 'quero').sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
   const year = new Date().getFullYear(), readYear = books.filter(b => b.status === 'lido' && (b.endDate || '').startsWith(year)).length;
-  $('#count').textContent = `${books.length} ${books.length === 1 ? 'volume' : 'volumes'} · ${readYear} ${readYear === 1 ? 'lido' : 'lidos'} em ${year}`;
+  const durs = books.filter(b => b.status === 'lido').map(readDays).filter(Boolean), avg = durs.length ? Math.round(durs.reduce((a, c) => a + c, 0) / durs.length) : null;
+  $('#count').textContent = `${books.length} ${books.length === 1 ? 'volume' : 'volumes'} · ${readYear} ${readYear === 1 ? 'lido' : 'lidos'} em ${year}${avg ? ` · média de ${plural(avg, 'dia', 'dias')} por livro` : ''}`;
   const cats = ['Todos', ...[...new Set(books.map(b => b.category).filter(Boolean))].sort()];
   if (!cats.includes(cat)) cat = 'Todos';
   $('#chips').innerHTML = cats.map(c => `<button class="pill ${c === cat ? 'on' : ''}" data-cat="${esc(c)}">${esc(c)}</button>`).join('');
@@ -709,6 +716,8 @@ function renderInfo(){
       <div><span>Categoria</span><b style="white-space:normal">${esc(b.category || '—')}</b></div>
       <div><span>Comecei em</span><b>${fmtDate(b.startDate)}</b></div>
       <div><span>Terminei em</span><b>${fmtDate(b.endDate)}</b></div>
+      ${(() => { const n = readDays(b); if (!n) return ''; const done = b.status === 'lido';
+        return `<div><span>${done ? 'Tempo de leitura' : 'Lendo há'}</span><b>${fmtDays(n)}</b></div>` + (done && b.pages ? `<div><span>Ritmo</span><b>~${Math.max(1, Math.round(b.pages / n))} págs./dia</b></div>` : ''); })()}
     </div>
     <div class="sec"><h3>Sinopse</h3><p class="syn">${b.synopsis ? esc(b.synopsis) : `<span style="color:var(--mute)">${ro ? 'Sem sinopse.' : 'Sem sinopse ainda. Use “Editar” para adicionar.'}</span>`}</p></div>
     <div class="sec"><h3>${ro ? 'Avaliação de ' + esc(first(viewing.profile)) : 'Minha avaliação'}</h3>
@@ -904,7 +913,7 @@ async function drawPeople(){
       const lists = await Promise.all(fol.map(p => S.list(p.uid).then(bs => bs.map(b => ({b, p}))).catch(() => [])));
       const items = lists.flat().filter(x => x.b.status !== 'quero').sort((x, y) => (y.b.endDate || y.b.updatedAt || '').localeCompare(x.b.endDate || x.b.updatedAt || '')).slice(0, 40);
       html = items.length ? items.map(({b, p}) => { const fs = finalScore(b), c = b.color || PALETTE[hash(b.id + b.title) % PALETTE.length];
-        return `<button class="feed-item" data-uid="${esc(p.uid)}" data-book="${esc(b.id)}"><span class="mini" style="background:${c}">${b.cover ? `<img src="${esc(b.cover)}" alt="" onerror="this.remove()">` : ''}</span><span><b>${esc(first(p))}</b> ${b.status === 'lendo' ? 'está lendo' : 'leu'} <i>${esc(b.title)}</i><small>${esc(b.author)}${b.endDate ? ' · ' + fmtDate(b.endDate) : ''}</small></span>${fs != null ? `<span class="sc">${fmtNum(fs)}</span>` : ''}</button>`; }).join('')
+        return `<button class="feed-item" data-uid="${esc(p.uid)}" data-book="${esc(b.id)}"><span class="mini" style="background:${c}">${b.cover ? `<img src="${esc(b.cover)}" alt="" onerror="this.remove()">` : ''}</span><span><b>${esc(first(p))}</b> ${b.status === 'lendo' ? 'está lendo' : 'leu'} <i>${esc(b.title)}</i><small>${esc(b.author)}${b.endDate ? ' · ' + fmtDate(b.endDate) : ''}${b.status === 'lido' && readDays(b) ? ' · em ' + plural(readDays(b), 'dia', 'dias') : ''}</small></span>${fs != null ? `<span class="sc">${fmtNum(fs)}</span>` : ''}</button>`; }).join('')
         : `<p class="pempty">${fol.length ? 'As pessoas que você segue ainda não registraram leituras.' : 'Quando você seguir alguém e o pedido for aceito, as leituras e notas aparecem aqui.'}</p>`;
     }
     if (ptab === tabNow) body.innerHTML = html;

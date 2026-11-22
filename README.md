@@ -132,6 +132,7 @@ other projects, it runs entirely on **free tiers**: no paid licenses, no server 
 | 🔎 | **Auto-fill** | Search the **Google Books API** to fill in title, author, year, pages, synopsis and cover |
 | 🖼️ | **Cover upload** | The photo is resized in the browser and the **spine color is taken from the cover** |
 | ⭐ | **Rating by criteria** | 6 criteria from 0 to 5 (half points), plus **custom criteria** of your own |
+| ⏱️ | **Reading time** | Days between start and finish, pages per day, "reading for X days" on books in progress and your average per book |
 | 🧮 | **Final score** | Average of the rated criteria only, so unrated ones don't pull the score down |
 | 🏷️ | **Search & filters** | By title, author or category, with category chips |
 | ⌨️ | **Navigation** | Previous / Next (also with arrow keys) and a "Look it up" shortcut |
@@ -297,6 +298,7 @@ como meus outros projetos, roda inteiro em **planos gratuitos**: sem licenças p
 | 🔎 | **Preenchimento automático** | Busca na **API do Google Livros** para preencher título, autor, ano, páginas, sinopse e capa |
 | 🖼️ | **Envio de capa** | A foto é redimensionada no próprio navegador e a **cor da lombada é tirada da capa** |
 | ⭐ | **Avaliação por critérios** | 6 critérios de 0 a 5 (de meio em meio ponto), além de **critérios personalizados** |
+| ⏱️ | **Tempo de leitura** | Dias entre o início e o fim, páginas por dia, "lendo há X dias" nos livros em andamento e a sua média por livro |
 | 🧮 | **Nota final** | Média só dos critérios avaliados, para os que ficaram sem nota não puxarem a média para baixo |
 | 🏷️ | **Busca e filtros** | Por título, autor ou categoria, com botões de categoria |
 | ⌨️ | **Navegação** | Anterior / Próximo (também pelas setas do teclado) e atalho "Pesquisar" |
