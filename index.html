@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light only">
+<meta name="theme-color" content="#efeeeb">
 <title>Minha Biblioteca</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,13 +17,13 @@ PICTURE: a própria estante horizontal de lombadas, com sombra e luz de lado.
 COLOUR and TYPE: papel cinza-pérola, tinta grafite; as cores vêm dos próprios livros. Cormorant itálico + Inter + mono miúdo.
 LAYOUT: título central, busca, categorias, estante; ficha do livro em painel que desliza.
 */
-:root{color-scheme:light dark;
+:root{color-scheme:light;
 --bg:light-dark(#efeeeb,#121211);--bg2:light-dark(#e2e1dd,#0b0b0a);
 --ink:light-dark(#1d1d1b,#ecebe6);--mute:light-dark(#77746d,#9a978f);--line:light-dark(#d3d1cb,#2a2a28);
 --card:light-dark(rgba(255,255,255,.62),rgba(32,32,30,.7));--solid:light-dark(#fbfaf8,#1b1b1a);
 --accent:light-dark(#9b3b2e,#e0846f);--shadow:light-dark(rgba(40,35,25,.28),rgba(0,0,0,.7));
 --serif:"Cormorant Garamond",Georgia,serif;--sans:Inter,system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace}
-:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+:root,:root[data-theme=light],:root[data-theme=dark]{color-scheme:light} /* sempre na versão clara, mesmo com o celular no modo escuro */
 *{box-sizing:border-box;min-width:0}
 html,body{height:100%}
 body{margin:0;background:radial-gradient(120% 80% at 50% 0%,var(--bg),var(--bg2));background-attachment:fixed;color:var(--ink);font:16px/1.55 var(--sans);overflow-x:clip;-webkit-font-smoothing:antialiased}
@@ -165,6 +167,8 @@ input[type=range].unset::-webkit-slider-thumb{border-color:var(--line)}
 .grid .full{grid-column:1/-1}
 @media(max-width:560px){.grid{grid-template-columns:minmax(0,1fr)}}
 .lookup{display:flex;gap:8px}
+.lookup .field{flex:1}
+.lookup .btn{flex:none;padding-inline:16px}
 .results{display:grid;gap:6px;margin-top:8px}
 .results button{display:flex;gap:12px;align-items:center;text-align:left;border:1px solid var(--line);background:transparent;border-radius:12px;padding:8px;min-height:44px}
 .results img{width:34px;height:50px;object-fit:cover;border-radius:2px;background:var(--bg2);flex:none}
