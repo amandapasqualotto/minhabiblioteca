@@ -86,7 +86,7 @@ label.lb{display:block;font-size:13px;color:var(--mute);margin:0 0 5px}
 .spine:hover{transform:translateY(-14px)}
 .spine.pull{transform:translateY(-40px) scale(1.03)}
 .spine .t{writing-mode:vertical-rl;transform:rotate(180deg);flex:1;display:flex;align-items:center;justify-content:center;padding:10px 0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-height:100%;line-height:1}
-.spine .t span{overflow:hidden;text-overflow:ellipsis}
+.spine .t span{display:block;overflow:hidden;text-overflow:ellipsis;text-align:center;max-height:100%}
 .spine .a{writing-mode:vertical-rl;transform:rotate(180deg);font:500 9.5px var(--sans);letter-spacing:.06em;text-transform:uppercase;opacity:.75;padding:4px 0 8px;max-height:40%;overflow:hidden;white-space:nowrap}
 .spine .band{position:absolute;left:0;right:0;height:2px;background:currentColor;opacity:.35}
 .spine .rib{position:absolute;top:-1px;right:5px;width:7px;height:26px;background:var(--accent);clip-path:polygon(0 0,100% 0,100% 100%,50% 75%,0 100%)}
@@ -218,6 +218,15 @@ input[type=range].unset::-webkit-slider-thumb{border-color:var(--line)}
 .ainote{font-size:13px;color:var(--mute);margin:12px 0 0}
 .ctx-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
 .ctx-box textarea{margin-bottom:4px}
+.share{width:min(940px,100%)}
+.share-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:start}
+@media(max-width:700px){.share-grid{grid-template-columns:minmax(0,1fr)}}
+.share-prev{background:var(--bg2);border-radius:16px;padding:16px;display:grid;place-items:center}
+.share-prev canvas{max-width:100%;max-height:min(62vh,560px);width:auto;height:auto;border-radius:8px;box-shadow:0 20px 40px -20px var(--shadow)}
+.seg{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 16px}
+.seg .pill{min-height:40px;font-size:14px}
+.chk{display:flex;align-items:center;gap:10px;min-height:44px;font-size:15px;cursor:pointer}
+.chk input{width:20px;height:20px;accent-color:var(--accent)}
 .ro-cm{font:400 19px/1.5 var(--serif);white-space:pre-line;margin:0}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -406,6 +415,26 @@ input[type=range].unset::-webkit-slider-thumb{border-color:var(--line)}
     <div class="msg" id="sMsg"></div>
     <div class="form-foot"><button type="button" class="btn ghost" id="sCancel">Cancelar</button><button class="btn" id="sSend">Enviar sugestão</button></div>
   </form>
+</div>
+
+<!-- ================= COMPARTILHAR ================= -->
+<div class="modal hide" id="shm">
+  <div class="form share" role="dialog" aria-modal="true" aria-labelledby="shTitle">
+    <h2 id="shTitle">Compartilhar</h2>
+    <p class="hint">Escolha o formato e o fundo. Depois baixe a imagem ou compartilhe direto no Instagram.</p>
+    <div class="share-grid">
+      <div class="share-prev"><canvas id="shc" aria-label="Prévia da imagem para compartilhar"></canvas></div>
+      <div>
+        <span class="lb">Formato</span><div class="seg" id="shFmt"></div>
+        <span class="lb">Fundo</span><div class="seg" id="shTheme"></div>
+        <label class="chk" id="shCmRow"><input type="checkbox" id="shCm" checked> Mostrar meu comentário</label>
+        <div class="form-foot" style="justify-content:flex-start"><button type="button" class="btn" id="shGo">Compartilhar</button><button type="button" class="btn ghost" id="shDl">Baixar imagem</button></div>
+        <p class="ainote" id="shMsg" role="status"></p>
+        <p class="ainote">Stories e Reels usam a mesma imagem vertical (1080 × 1920). Post é 1080 × 1350 e Quadrado é 1080 × 1080.</p>
+      </div>
+    </div>
+    <div class="form-foot"><button type="button" class="btn ghost" id="shClose">Fechar</button></div>
+  </div>
 </div>
 
 <datalist id="cats"></datalist>
@@ -645,11 +674,27 @@ function sortRead(a, b){ if ((a.status === 'lendo') !== (b.status === 'lendo')) 
 
 function spineHTML(b){
   const h = hash(b.id + b.title), color = b.color || PALETTE[h % PALETTE.length], ink = textOn(color);
-  const pages = +b.pages || 250, w = Math.max(26, Math.min(62, Math.round(pages / 9))), ht = 168 + (h % 5) * 9 + Math.min(30, pages / 30);
+  const pages = +b.pages || 250, len = (b.title || '').length, w = Math.min(62, Math.max(26, Math.round(pages / 9), 24 + Math.max(0, len - 14) * 1.3)), ht = 168 + (h % 5) * 9 + Math.min(30, pages / 30);
   const style = h % 3, font = style === 0 ? `600 ${w > 40 ? 15 : 13}px var(--sans);text-transform:uppercase;letter-spacing:.04em` : style === 1 ? `500 ${w > 40 ? 20 : 17}px var(--serif)` : `italic 500 ${w > 40 ? 19 : 16}px var(--serif)`;
   const bands = h % 2 ? `<i class="band" style="top:12px"></i><i class="band" style="bottom:12px"></i>` : '';
   return `<button class="spine" data-id="${b.id}" style="width:${w}px;height:${ht}px;background:linear-gradient(90deg,${color},${color} 70%,color-mix(in srgb,${color},#000 18%));color:${ink}" title="${esc(b.title)} — ${esc(b.author)}" aria-label="${esc(b.title)}, de ${esc(b.author)}">${bands}${b.status === 'lendo' ? '<i class="rib"></i>' : ''}<span class="t" style="font:${font}"><span>${esc(b.title)}</span></span>${w >= 34 ? `<span class="a">${esc((b.author || '').split(' ').slice(-1)[0])}</span>` : ''}</button>`;
 }
+/* Ajusta o título de cada lombada para caber inteiro: diminui a letra e, se precisar, quebra em 2 linhas */
+function fitSpines(){
+  document.querySelectorAll('.spine[data-id] .t').forEach(t => {
+    const s = t.firstElementChild, sp = t.parentElement; if (!s) return;
+    t.style.fontSize = ''; s.style.whiteSpace = 'nowrap'; s.style.lineHeight = '';
+    const maxW = sp.clientWidth - 8, over = () => s.scrollHeight > s.clientHeight + 1 || s.offsetWidth > maxW;
+    const base = parseFloat(getComputedStyle(t).fontSize); let f = base;
+    const minOne = maxW >= 24 ? Math.max(12, base - 4) : 9;          /* em lombada larga, prefere quebrar a linha a encolher demais */
+    while (over() && f > minOne) { f -= 1; t.style.fontSize = f + 'px'; }
+    if (over() && maxW >= 24) {
+      s.style.whiteSpace = 'normal'; s.style.lineHeight = '1.04'; f = base; t.style.fontSize = f + 'px';
+      while (over() && f > 9) { f -= 1; t.style.fontSize = f + 'px'; }
+    }
+  });
+}
+if (document.fonts) document.fonts.ready.then(() => fitSpines());
 function ghosts(){ return Array.from({length: 9}, (_, i) => `<span class="spine ghost" style="width:${28 + i % 3 * 8}px;height:${170 + i * 7 % 40}px"></span>`).join(''); }
 
 function render(){
@@ -674,7 +719,7 @@ function render(){
   $('#shelfTo').innerHTML = to.length ? to.map(spineHTML).join('') : `<p class="empty">${books.some(b => b.status === 'quero') ? 'Nada encontrado aqui.' : 'Livros marcados como “Quero ler” aparecem nesta estante.'}</p>`;
   $('#countTo').textContent = `${books.filter(b => b.status === 'quero').length} livros`;
   list = [...read, ...to];
-  updateArrows();
+  updateArrows(); requestAnimationFrame(fitSpines);
 }
 $('#chips').onclick = e => { const b = e.target.closest('[data-cat]'); if (b) { cat = b.dataset.cat; render(); } };
 $('#q').oninput = e => { query = e.target.value; render(); };
@@ -748,7 +793,7 @@ function renderInfo(){
           : `<p class="ainote" style="margin-top:0">${ro ? 'Ainda sem avaliação.' : 'Ainda sem avaliação. Clique em “Editar” para dar suas notas.'}</p>`; })()}
     </div>
     <div class="sec"><h3>${ro ? 'Comentários de ' + esc(first(viewing.profile)) : 'Meus comentários'}</h3><p class="ro-cm">${b.comments ? esc(b.comments) : `<span style="color:var(--mute)">${ro ? 'Sem comentários.' : 'Sem comentários ainda.'}</span>`}</p></div>
-    ${ro ? '' : '<div class="actions"><button class="btn" id="editB">Editar livro e avaliação</button><button class="btn ghost" id="delB">Excluir livro</button></div>'}`;
+    ${ro ? '' : '<div class="actions"><button class="btn" id="editB">Editar livro e avaliação</button><button class="btn ghost" id="shareB">Compartilhar</button><button class="btn ghost" id="delB">Excluir livro</button></div>'}`;
   const i = list.findIndex(x => x.id === b.id);
   $('#prevB').disabled = i <= 0; $('#nextB').disabled = i < 0 || i >= list.length - 1;
   $('#lookB').href = 'https://www.google.com/search?q=' + encodeURIComponent(`${b.title} ${b.author} livro`);
@@ -771,6 +816,7 @@ function rateRow(r, i, ro){
 function bindInfo(){
   const b = current;
   $('#editB').onclick = () => openForm(b);
+  $('#shareB').onclick = () => openShare(b);
   if ($('#ctxDetail')) $('#ctxDetail').onclick = async e => {
     const btn = e.currentTarget, m = $('#ctxDMsg'); btn.disabled = true; m.textContent = 'Gerando com IA… leva alguns segundos.';
     try {
@@ -804,6 +850,7 @@ document.addEventListener('keydown', e => {
   if (!$('#fm').classList.contains('hide')) { if (e.key === 'Escape') closeForm(); return; }
   if (!$('#um').classList.contains('hide')) return;
   if (!$('#sm').classList.contains('hide')) { if (e.key === 'Escape') $('#sm').classList.add('hide'); return; }
+  if (!$('#shm').classList.contains('hide')) { if (e.key === 'Escape') $('#shm').classList.add('hide'); return; }
   if (!current && !$('#pp').classList.contains('hide')) { if (e.key === 'Escape') closePeople(); return; }
   if (!current || ['INPUT','TEXTAREA'].includes(document.activeElement.tagName)) return;
   if (e.key === 'Escape') closeBook(); if (e.key === 'ArrowLeft') step(-1); if (e.key === 'ArrowRight') step(1);
@@ -931,6 +978,140 @@ async function fillWithAI(manual){
   btn.disabled = false; lookup.lang = '';
 }
 $('#ctxGo').onclick = () => fillWithAI(true);
+
+/* ---------------- Compartilhar (imagem para Stories/Reels, Post, Quadrado) ---------------- */
+const SH_FORMATS = {story: {w: 1080, h: 1920, label: 'Stories / Reels'}, post: {w: 1080, h: 1350, label: 'Post 4:5'}, square: {w: 1080, h: 1080, label: 'Quadrado'}};
+const SH_THEMES = {book: 'Cor do livro', light: 'Claro', dark: 'Escuro'};
+const MONTHS = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+let sh = {fmt: 'story', theme: 'book', comment: true, book: null, img: null};
+const shade = (hex, amt) => { const n = parseInt(hex.slice(1), 16); const f = c => Math.max(0, Math.min(255, Math.round(c + (amt < 0 ? c * amt : (255 - c) * amt)))); return `rgb(${f(n >> 16)},${f(n >> 8 & 255)},${f(n & 255)})`; };
+function loadImg(src, cors){ return new Promise((ok, no) => { const i = new Image(); if (cors) i.crossOrigin = 'anonymous'; i.onload = () => ok(i); i.onerror = no; i.src = src; }); }
+async function loadCover(url){
+  if (!url) return null;
+  if (url.startsWith('data:')) return loadImg(url).catch(() => null);
+  try { return await loadImg(url, true); } catch {}
+  try { return await loadImg('/api/capa?url=' + encodeURIComponent(url), true); } catch {}
+  return null;
+}
+function wrapText(ctx, text, maxW, maxLines){
+  const words = String(text || '').replace(/\s+/g, ' ').trim().split(' '), lines = []; let cur = '';
+  for (const w of words) { const t = cur ? cur + ' ' + w : w; if (ctx.measureText(t).width <= maxW || !cur) cur = t; else { lines.push(cur); cur = w; } }
+  if (cur) lines.push(cur);
+  if (lines.length > maxLines) { const keep = lines.slice(0, maxLines); let last = keep[maxLines - 1]; while (ctx.measureText(last + '…').width > maxW && last.includes(' ')) last = last.slice(0, last.lastIndexOf(' ')); keep[maxLines - 1] = last.replace(/[,.;:!?]$/, '') + '…'; return keep; }
+  return lines;
+}
+function starPath(ctx, cx, cy, r){ ctx.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * .45 : r; ctx.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); } ctx.closePath(); }
+function drawStars(ctx, x, y, r, score, on, off){
+  const gap = r * 2.5;
+  for (let i = 0; i < 5; i++) { starPath(ctx, x + r + i * gap, y, r); ctx.fillStyle = off; ctx.fill(); }
+  ctx.save(); ctx.beginPath(); ctx.rect(x, y - r, (gap * 5 - (gap - 2 * r)) * Math.min(1, score / 5), r * 2); ctx.clip();
+  for (let i = 0; i < 5; i++) { starPath(ctx, x + r + i * gap, y, r); ctx.fillStyle = on; ctx.fill(); }
+  ctx.restore(); return gap * 5 - (gap - 2 * r);
+}
+function drawCoverBox(ctx, b, img, x, y, w, h, color){
+  ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowBlur = w * .12; ctx.shadowOffsetY = w * .06;
+  ctx.fillStyle = color; ctx.fillRect(x, y, w, h); ctx.restore();
+  ctx.save(); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
+  if (img) { const s = Math.max(w / img.width, h / img.height), iw = img.width * s, ih = img.height * s; ctx.drawImage(img, x + (w - iw) / 2, y + (h - ih) / 2, iw, ih); }
+  else {
+    const g = ctx.createLinearGradient(x, y, x + w, y + h); g.addColorStop(0, color); g.addColorStop(1, shade(color, -.25)); ctx.fillStyle = g; ctx.fillRect(x, y, w, h);
+    const ink = textOn(color); ctx.fillStyle = ink; ctx.textAlign = 'center';
+    ctx.font = `500 ${w * .055}px Inter, sans-serif`; ctx.fillText((b.author || '').toUpperCase().slice(0, 34), x + w / 2, y + h * .12);
+    ctx.font = `500 ${w * .11}px "Cormorant Garamond", Georgia, serif`;
+    const tl = wrapText(ctx, b.title, w * .8, 4), lh = w * .12, ty = y + h / 2 - (tl.length - 1) * lh / 2;
+    tl.forEach((l, i) => ctx.fillText(l, x + w / 2, ty + i * lh + w * .03));
+    ctx.globalAlpha = .4; ctx.fillRect(x + w * .3, ty - lh * .9, w * .4, 2); ctx.fillRect(x + w * .3, ty + (tl.length - 1) * lh + lh * .55, w * .4, 2); ctx.globalAlpha = 1;
+  }
+  const sp = ctx.createLinearGradient(x, 0, x + w * .07, 0); sp.addColorStop(0, 'rgba(0,0,0,.28)'); sp.addColorStop(.5, 'rgba(255,255,255,.12)'); sp.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = sp; ctx.fillRect(x, y, w * .07, h); ctx.restore();
+}
+function statusLine(b){
+  if (b.status === 'lendo') return 'Lendo agora';
+  if (b.status === 'quero') return 'Na minha lista';
+  const [y, m] = (b.endDate || '').split('-'), n = readDays(b);
+  return (m ? `Li em ${MONTHS[+m - 1]} de ${y}` : 'Lido') + (n ? ` · em ${plural(n, 'dia', 'dias')}` : '');
+}
+async function drawShare(c){
+  const b = sh.book, F = SH_FORMATS[sh.fmt], W = F.w, H = F.h; c.width = W; c.height = H;
+  const ctx = c.getContext('2d'), color = b.color || PALETTE[hash(b.id + b.title) % PALETTE.length];
+  let bg1, bg2, ink, soft, accent, starOn;
+  if (sh.theme === 'light') { bg1 = '#f4f3f0'; bg2 = '#dedcd6'; ink = '#1d1d1b'; soft = 'rgba(29,29,27,.55)'; accent = '#9b3b2e'; starOn = '#9b3b2e'; }
+  else if (sh.theme === 'dark') { bg1 = '#1d1c1a'; bg2 = '#0b0b0a'; ink = '#efeee9'; soft = 'rgba(239,238,233,.6)'; accent = '#e0a07f'; starOn = '#e6b450'; }
+  else { bg1 = shade(color, lum(color) > .6 ? -.05 : .12); bg2 = shade(color, -.45); ink = textOn(color); soft = ink === '#1d1d1b' ? 'rgba(29,29,27,.6)' : 'rgba(246,244,239,.7)'; accent = ink; starOn = ink === '#1d1d1b' ? '#1d1d1b' : '#f2c14e'; }
+  const g = ctx.createLinearGradient(0, 0, W * .3, H); g.addColorStop(0, bg1); g.addColorStop(1, bg2); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  const rg = ctx.createRadialGradient(W * .5, H * .25, 0, W * .5, H * .25, W * .9); rg.addColorStop(0, 'rgba(255,255,255,.10)'); rg.addColorStop(1, 'rgba(255,255,255,0)'); ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H);
+
+  const fs = finalScore(b), cm = sh.comment && b.comments ? b.comments : '', user = S.profile ? '@' + S.profile.username : '', host = /^https?:/.test(location.protocol) ? location.host : '';
+  const label = () => { ctx.fillStyle = soft; ctx.font = '500 26px "JetBrains Mono", monospace'; try { ctx.letterSpacing = '6px'; } catch {} };
+  const unlabel = () => { try { ctx.letterSpacing = '0px'; } catch {} };
+  const scoreRow = (x, y, align, size) => {
+    if (fs == null) return 0;
+    ctx.font = `500 ${size}px "Cormorant Garamond", Georgia, serif`; const num = fmtNum(fs), nw = ctx.measureText(num).width, r = size * .2;
+    const starsW = r * 2.5 * 5 - (r * 2.5 - 2 * r), total = nw + size * .25 + starsW, x0 = align === 'center' ? x - total / 2 : x;
+    ctx.fillStyle = ink; ctx.textAlign = 'left'; ctx.fillText(num, x0, y + size * .32);
+    drawStars(ctx, x0 + nw + size * .25, y, r, fs, starOn, ink === '#1d1d1b' ? 'rgba(29,29,27,.18)' : 'rgba(255,255,255,.22)');
+    return size;
+  };
+
+  if (sh.fmt === 'square') {
+    const cw = 400, ch = 600, cx = 90, cy = (H - ch) / 2; drawCoverBox(ctx, b, sh.img, cx, cy, cw, ch, color);
+    const tx = cx + cw + 70, tw = W - tx - 80; let y = 150;
+    label(); ctx.textAlign = 'left'; ctx.fillText('MINHA BIBLIOTECA', tx, y); unlabel(); y += 70;
+    ctx.fillStyle = soft; ctx.font = 'italic 400 32px "Cormorant Garamond", Georgia, serif'; ctx.fillText(statusLine(b), tx, y); y += 80;
+    ctx.fillStyle = ink; ctx.font = '500 64px "Cormorant Garamond", Georgia, serif';
+    wrapText(ctx, b.title, tw, 3).forEach(l => { ctx.fillText(l, tx, y); y += 66; });
+    ctx.fillStyle = accent; ctx.font = 'italic 400 36px "Cormorant Garamond", Georgia, serif'; ctx.fillText(wrapText(ctx, b.author, tw, 1)[0] || '', tx, y + 4); y += 90;
+    if (scoreRow(tx, y, 'left', 72)) y += 100;
+    if (cm) { ctx.fillStyle = ink; ctx.font = 'italic 400 34px "Cormorant Garamond", Georgia, serif'; wrapText(ctx, '“' + cm + '”', tw, Math.max(1, Math.floor((H - 150 - y) / 44))).forEach(l => { ctx.fillText(l, tx, y); y += 44; }); }
+    label(); ctx.font = '500 22px "JetBrains Mono", monospace'; ctx.fillText([user, host].filter(Boolean).join('  ·  '), tx, H - 110); unlabel();
+    return;
+  }
+  const story = sh.fmt === 'story', cw = story ? 540 : 360, ch = cw * 1.5, cx = (W - cw) / 2, cy = story ? 250 : 150;
+  ctx.textAlign = 'center'; label(); ctx.fillText('MINHA BIBLIOTECA', W / 2, story ? 150 : 90); unlabel();
+  drawCoverBox(ctx, b, sh.img, cx, cy, cw, ch, color);
+  let y = cy + ch + (story ? 120 : 90);
+  ctx.textAlign = 'center'; ctx.fillStyle = soft; ctx.font = `italic 400 ${story ? 36 : 30}px "Cormorant Garamond", Georgia, serif`; ctx.fillText(statusLine(b), W / 2, y - (story ? 52 : 44));
+  ctx.fillStyle = ink; ctx.font = `500 ${story ? 78 : 60}px "Cormorant Garamond", Georgia, serif`;
+  wrapText(ctx, b.title, W - 180, 2).forEach(l => { ctx.fillText(l, W / 2, y + (story ? 30 : 20)); y += story ? 82 : 62; });
+  ctx.fillStyle = accent; ctx.font = `italic 400 ${story ? 42 : 34}px "Cormorant Garamond", Georgia, serif`; ctx.fillText(wrapText(ctx, b.author, W - 200, 1)[0] || '', W / 2, y + (story ? 26 : 16)); y += story ? 110 : 80;
+  if (scoreRow(W / 2, y, 'center', story ? 84 : 64)) y += story ? 110 : 80;
+  if (cm) { ctx.fillStyle = ink; ctx.textAlign = 'center'; const sz = story ? 40 : 32, lh = sz * 1.3, room = Math.floor((H - (story ? 200 : 130) - y) / lh);
+    if (room > 0) wrapText(ctx, '“' + cm + '”', W - 220, Math.min(story ? 6 : 3, room)).forEach(l => { ctx.font = `italic 400 ${sz}px "Cormorant Garamond", Georgia, serif`; ctx.fillText(l, W / 2, y + sz * .4); y += lh; }); }
+  ctx.textAlign = 'center'; label(); ctx.font = '500 24px "JetBrains Mono", monospace'; ctx.fillText([user, host].filter(Boolean).join('  ·  '), W / 2, H - (story ? 120 : 70)); unlabel();
+}
+async function openShare(b){
+  sh.book = b; sh.img = null; $('#shMsg').textContent = '';
+  $('#shCmRow').classList.toggle('hide', !b.comments);
+  drawSegs(); $('#shm').classList.remove('hide');
+  try { await Promise.all(['500 60px "Cormorant Garamond"', 'italic 400 40px "Cormorant Garamond"', '500 24px "JetBrains Mono"', '500 20px Inter'].map(f => document.fonts.load(f))); } catch {}
+  await drawShare($('#shc'));
+  sh.img = await loadCover(b.cover);
+  if (b.cover && !sh.img) $('#shMsg').textContent = 'Não consegui usar a foto da capa nesta imagem, então usei uma capa desenhada.';
+  await drawShare($('#shc'));
+}
+function drawSegs(){
+  $('#shFmt').innerHTML = Object.entries(SH_FORMATS).map(([k, v]) => `<button type="button" class="pill ${k === sh.fmt ? 'on' : ''}" data-k="${k}">${v.label}</button>`).join('');
+  $('#shTheme').innerHTML = Object.entries(SH_THEMES).map(([k, v]) => `<button type="button" class="pill ${k === sh.theme ? 'on' : ''}" data-k="${k}">${v}</button>`).join('');
+  $('#shCm').checked = sh.comment;
+}
+$('#shFmt').onclick = e => { const b = e.target.closest('[data-k]'); if (b) { sh.fmt = b.dataset.k; drawSegs(); drawShare($('#shc')); } };
+$('#shTheme').onclick = e => { const b = e.target.closest('[data-k]'); if (b) { sh.theme = b.dataset.k; drawSegs(); drawShare($('#shc')); } };
+$('#shCm').onchange = e => { sh.comment = e.target.checked; drawShare($('#shc')); };
+$('#shClose').onclick = () => $('#shm').classList.add('hide');
+$('#shm').onclick = e => { if (e.target.id === 'shm') $('#shm').classList.add('hide'); };
+function shareBlob(){ return new Promise((ok, no) => { try { $('#shc').toBlob(b => b ? ok(b) : no(new Error('blob')), 'image/png'); } catch (e) { no(e); } }); }
+const shareName = () => `${(sh.book.title || 'livro').toLowerCase().normalize('NFD').replace(/[^\w]+/g, '-').replace(/^-|-$/g, '').slice(0, 40)}-${sh.fmt}.png`;
+$('#shDl').onclick = async () => {
+  try { const blob = await shareBlob(), a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = shareName(); document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); $('#shMsg').textContent = 'Imagem baixada. É só postar no Instagram.'; }
+  catch { $('#shMsg').textContent = 'Não consegui gerar a imagem. Tente de novo.'; }
+};
+$('#shGo').onclick = async () => {
+  try {
+    const file = new File([await shareBlob()], shareName(), {type: 'image/png'});
+    if (navigator.canShare && navigator.canShare({files: [file]})) { await navigator.share({files: [file], title: sh.book.title}); }
+    else $('#shMsg').textContent = 'Este navegador não compartilha imagens direto. Use “Baixar imagem” e poste pelo Instagram.';
+  } catch (e) { if (e.name !== 'AbortError') $('#shMsg').textContent = 'Não deu para compartilhar daqui. Use “Baixar imagem”.'; }
+};
 
 /* ---------------- Pessoas ---------------- */
 async function refreshRequests(){
