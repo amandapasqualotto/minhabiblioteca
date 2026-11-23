@@ -433,7 +433,7 @@ input[type=range].unset::-webkit-slider-thumb{border-color:var(--line)}
     <h2>Pessoas</h2>
     <div class="me" id="meLine"></div>
     <div class="ptabs" id="ptabs">
-      <button class="pill" data-pt="search">Buscar</button>
+      <button class="pill" data-pt="search">Descobrir</button>
       <button class="pill" data-pt="req">Pedidos <span class="badge hide" id="reqBadge2"></span></button>
       <button class="pill" data-pt="sugs">Sugestões <span class="badge hide" id="sugBadge"></span></button>
       <button class="pill" data-pt="feed">Atividade</button>
@@ -611,6 +611,7 @@ const LocalStore = {
     names[p.username] = me; profs[me] = {...old, username: p.username, name: p.name};
     LS.set('lib_usernames', names); LS.set('lib_profiles', profs); return {...profs[me], uid: me}; },
   async findUsers(q){ return Object.entries(P_()).map(([u, p]) => ({...p, uid: u})).filter(p => p.username.startsWith(q)).slice(0, 10); },
+  async listUsers(after, n){ return Object.entries(P_()).map(([u, p]) => ({...p, uid: u})).sort((a, b) => a.username.localeCompare(b.username)).filter(p => !after || p.username > after).slice(0, n); },
   async follow(t){ const me = this.user.uid; LS.set('lib_follows', [...F_().filter(x => !(x.from === me && x.to === t)), {from: me, to: t, status: 'pending', at: new Date().toISOString()}]); },
   async unfollow(t){ const me = this.user.uid; LS.set('lib_follows', F_().filter(x => !(x.from === me && x.to === t))); },
   async removeFollower(f){ const me = this.user.uid; LS.set('lib_follows', F_().filter(x => !(x.from === f && x.to === me))); },
@@ -662,6 +663,7 @@ async function makeFirebaseStore(cfg){
       b.set(d('users', me), {username: p.username, name: p.name, updatedAt: now()}, {merge: true});
       await b.commit(); return {uid: me, username: p.username, name: p.name};
     },
+    async listUsers(after, n){ const parts = [F.collection(db, 'users'), F.orderBy('username')]; if (after) parts.push(F.startAfter(after)); parts.push(F.limit(n)); const s = await F.getDocs(F.query(...parts)); return s.docs.map(x => ({uid: x.id, ...x.data()})); },
     async findUsers(q){ const s = await F.getDocs(F.query(F.collection(db, 'users'), F.orderBy('username'), F.startAt(q), F.endAt(q + ''), F.limit(10))); return s.docs.map(x => ({uid: x.id, ...x.data()})); },
     async follow(t){
       const me = this.user.uid, mp = this.profile || {}, tp = await this.getProfile(t) || {}, at = now(), b = F.writeBatch(db);
@@ -1431,6 +1433,21 @@ function avatar(p){ const c = PALETTE[hash(p.uid) % PALETTE.length]; return `<sp
 function urow(p, acts){ return `<div class="urow" data-uid="${esc(p.uid)}">${avatar(p)}<div class="who2"><b>${esc(p.name || p.username || 'Leitor(a)')}</b><small>@${esc(p.username || '')}</small></div><div class="acts">${acts}</div></div>`; }
 const A = (a, t, cls = '') => `<button class="sbtn ${cls}" data-a="${a}">${t}</button>`;
 function relBtns(st){ return A('view', 'Ver') + (st === 'accepted' ? A('unfollow', 'Seguindo ✓') : st === 'pending' ? A('unfollow', 'Solicitado') : A('follow', 'Seguir', 'pri')); }
+/* Lista de todas as pessoas, em ordem alfabética, de 30 em 30 */
+async function allUsers(){
+  const PAGE = 30, list = $('#allList'), more = $('#allMore'); if (!list) return;
+  more.disabled = true;
+  try {
+    const got = await S.listUsers(allUsers.last, PAGE), others = got.filter(p => p.uid !== S.user.uid && p.username);
+    const sts = await Promise.all(others.map(p => S.statusWith(p.uid).catch(() => null)));
+    if (!$('#allList')) return;
+    list.insertAdjacentHTML('beforeend', others.map((p, i) => urow(p, relBtns(sts[i]))).join(''));
+    allUsers.count += others.length; if (got.length) allUsers.last = got[got.length - 1].username;
+    more.classList.toggle('hide', got.length < PAGE);
+    if (!allUsers.count && got.length < PAGE) list.innerHTML = '<p class="pempty">Ainda não há outras pessoas no app. Compartilhe seu perfil para chamar os amigos.</p>';
+  } catch { list.insertAdjacentHTML('beforeend', '<p class="pempty">Não consegui carregar a lista agora.</p>'); }
+  more.disabled = false;
+}
 async function drawPeople(){
   const me = S.user.uid, body = $('#pbody');
   $('#meLine').innerHTML = S.profile ? `<span>Você é <b>@${esc(S.profile.username)}</b></span><button class="sbtn pri" data-share-profile>Compartilhar meu perfil</button><button class="sbtn" id="editProf">Editar perfil</button>` : `<button class="sbtn pri" id="editProf">Criar nome de usuário</button>`;
@@ -1438,15 +1455,19 @@ async function drawPeople(){
   document.querySelectorAll('#ptabs [data-pt]').forEach(b => b.classList.toggle('on', b.dataset.pt === ptab));
   const tabNow = ptab;
   if (ptab === 'search') {
-    body.innerHTML = `<input class="field" id="ps" placeholder="Buscar por @nome de usuário" autocapitalize="none" spellcheck="false" aria-label="Buscar pessoas"><div id="psr"><p class="pempty">Digite o começo do nome de usuário de alguém.</p></div>`;
-    const inp = $('#ps'); inp.focus();
+    body.innerHTML = `<input class="field" id="ps" placeholder="Buscar por @nome de usuário" autocapitalize="none" spellcheck="false" aria-label="Buscar pessoas"><div id="psr"></div>
+      <div id="allBox"><h3 style="font:600 13px var(--sans);color:var(--mute);margin:22px 0 4px">Todas as pessoas</h3><div id="allList"><p class="pempty">Carregando…</p></div><div style="text-align:center"><button class="sbtn hide" id="allMore" style="margin-top:14px">Carregar mais</button></div></div>`;
+    const inp = $('#ps');
     inp.oninput = () => { clearTimeout(inp.h); inp.h = setTimeout(async () => {
-      const q = cleanU(inp.value), out = $('#psr'); if (!q) { out.innerHTML = '<p class="pempty">Digite o começo do nome de usuário de alguém.</p>'; return; }
+      const q = cleanU(inp.value), out = $('#psr'); $('#allBox').classList.toggle('hide', !!q);
+      if (!q) { out.innerHTML = ''; return; }
       try { const found = (await S.findUsers(q)).filter(p => p.uid !== me);
         const sts = await Promise.all(found.map(p => S.statusWith(p.uid).catch(() => null)));
         if (inp.value && cleanU(inp.value) === q) out.innerHTML = found.length ? found.map((p, i) => urow(p, relBtns(sts[i]))).join('') : `<p class="pempty">Ninguém encontrado com “${esc(q)}”.</p>`;
       } catch { out.innerHTML = '<p class="pempty">Não consegui buscar agora.</p>'; }
     }, 300); };
+    allUsers.last = null; allUsers.count = 0; $('#allList').innerHTML = ''; allUsers();
+    $('#allMore').onclick = allUsers;
     return;
   }
   body.innerHTML = '<p class="pempty">Carregando…</p>';
